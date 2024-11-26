@@ -27,7 +27,7 @@ def decode_image(image: Union[Image.Image, ViamImage]) -> np.ndarray:
         raw_image (Union[Image.Image, RawImage])
 
     Returns:
-        np.ndarray: BGR numpy array
+        np.ndarray: RGB numpy array
     """
 
     if isinstance(image, ViamImage):
@@ -54,7 +54,7 @@ def resource_path(relative_path):
     """
     Get the absolute path to a resource file, considering different environments.
 
-    Args:\
+    Args:
         relative_path (str): The relative path to the resource file.
 
     Returns:

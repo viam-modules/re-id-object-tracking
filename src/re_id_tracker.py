@@ -115,6 +115,11 @@ class ReIDObjetcTracker(Vision, Reconfigurable):
         detections = None
         if return_detections:
             detections = self.tracker.get_current_detections()
+
+        # do_cmd_res = None
+        # if extra is not None:
+        #     do_cmd_res = await self.do_command(extra)
+
         return CaptureAllResult(
             image=img, classifications=classifications, detections=detections
         )
@@ -197,6 +202,16 @@ class ReIDObjetcTracker(Vision, Reconfigurable):
         list_cmd = command.get("list", None)
         if list_cmd:
             do_command_output["list"] = self.tracker.list_objects()
+
+        list_current_cmd = command.get("list_current", None)
+        if list_current_cmd:
+            do_command_output["list_current"] = self.tracker.list_current()
+
+        recompute_embeddings = command.get("recompute_embeddings", None)
+        if recompute_embeddings:
+            do_command_output["recompute_embeddings"] = (
+                self.tracker.recompute_embeddings()
+            )
 
         return do_command_output
 

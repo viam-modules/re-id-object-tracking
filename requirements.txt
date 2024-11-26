@@ -1,36 +1,33 @@
 viam-sdk>=0.21
 
 numpy <2
-
-torch==2.2.2
-torchvision == 0.18
+torch==2.0
+torchvision == 0.14
 opencv-python
 pillow
 
 scipy
-mediapipe
 
-##torchreid
-torchreid
 
-##from torchreid requirements
-numpy
-Cython
-h5py
-Pillow
-six
-scipy
-opencv-python
-matplotlib
-tb-nightly
-future
-yacs
-gdown
-flake8
-yapf
-isort==4.3.21
-imageio
-chardet
+tabulate
+# ##from torchreid requirements
+# numpy
+# Cython
+# h5py
+# Pillow
+# six
+# scipy
+# opencv-python
+# matplotlib
+# tb-nightly
+# future
+# yacs
+# gdown
+# flake8
+# yapf
+# isort==4.3.21
+# imageio
+# chardet
 
 ## for testing and linting
 pytest

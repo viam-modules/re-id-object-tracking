@@ -18,7 +18,7 @@ class TrackerConfig:
             field_name="min_track_persistence",
             config=config,
             min_value=0,
-            default_value=0,
+            default_value=10,
         )
         self.lambda_value = FloatAttribute(
             field_name="lambda_value",
@@ -39,7 +39,7 @@ class TrackerConfig:
             config=config,
             min_value=0,
             max_value=5,
-            default_value=0.25,
+            default_value=0.3,
         )
         self.feature_distance_metric = StringAttribute(
             field_name="feature_distance_metric",
@@ -51,7 +51,7 @@ class TrackerConfig:
         self.max_frequency = FloatAttribute(
             field_name="max_frequency_hz",
             config=config,
-            default_value=30,
+            default_value=10,
             min_value=1,
             max_value=100,
         )
@@ -66,11 +66,23 @@ class TrackerConfig:
         self.start_fresh = BoolAttribute(
             field_name="start_fresh",
             config=config,
+            default_value=True,
+        )
+
+        self.save_to_db = BoolAttribute(
+            field_name="save_to_db",
+            config=config,
             default_value=False,
         )
 
         self._start_background_loop = BoolAttribute(
             field_name="_start_background_loop", config=config, default_value=True
+        )
+
+        self.path_to_known_persons = StringAttribute(
+            field_name="path_to_known_persons",
+            config=config,
+            default_value=None,
         )
 
 
@@ -79,23 +91,24 @@ class DetectorConfig:
         self.model_name = StringAttribute(
             field_name="detector_model_name",
             config=config,
-            default_value="effDet0_int8",
-            allowlist=["effDet0_int8", "effDet0_fp32", "effDet2_fp32"],
+            default_value="fasterrcnn_mobilenet_v3_large_320_fpn",
+            allowlist=["fasterrcnn_mobilenet_v3_large_320_fpn"],
         )
         self.threshold = FloatAttribute(
             field_name="detection_threshold",
             config=config,
             min_value=0.0,
             max_value=1.0,
-            default_value=0.4,
+            default_value=0.6,
         )
         self.device = StringAttribute(
             field_name="detector_device",
             config=config,
             default_value="cpu",
-            allowlist=["cpu", "gpu"],
+            allowlist=["cpu", "cuda"],
         )
 
+        # TODO: add usage for torchvision
         self.max_results = IntAttribute(
             field_name="detection_max_detection_results",
             config=config,
@@ -103,7 +116,57 @@ class DetectorConfig:
             min_value=1,
         )
 
-        # TODO: add a filter for detection label and confidence here
+
+class FaceIdConfig:
+    def __init__(self, config: ServiceConfig):
+        self.path_to_known_faces = StringAttribute(
+            field_name="path_to_known_faces",
+            config=config,
+            default_value=None,
+        )
+
+        self.device = StringAttribute(
+            field_name="face_detector_device",
+            config=config,
+            default_value="cpu",
+            allowlist=["cpu", "cuda"],
+        )
+
+        self.detector = StringAttribute(
+            field_name="face_detector_model",
+            config=config,
+            default_value="ultraface_version-RFB-320-int8",
+        )
+
+        self.detector_threshold = FloatAttribute(
+            field_name="face_detection_threshold",
+            config=config,
+            min_value=0.0,
+            max_value=1.0,
+            default_value=0.9,
+        )
+
+        self.feature_extractor = StringAttribute(
+            field_name="face_feature_extractor_model",
+            config=config,
+            default_value="facenet",
+        )
+
+        self.cosine_id_threshold = FloatAttribute(
+            field_name="cosine_id_threshold",
+            config=config,
+            min_value=0.0,
+            max_value=1.0,
+            default_value=0.3,
+        )
+
+        self.euclidean_id_threshold = FloatAttribute(
+            field_name="euclidean_id_threshold",
+            config=config,
+            min_value=0.0,
+            max_value=1.0,
+            default_value=0.9,
+        )
 
 
 class FeatureEncoderConfig:
@@ -118,7 +181,7 @@ class FeatureEncoderConfig:
         self.device = StringAttribute(
             field_name="feature_encoder_device",
             config=config,
-            default_value="cpu",
+            default_value="cuda",
             allowlist=["cpu", "cuda"],
         )
 
@@ -144,3 +207,4 @@ class ReIDObjetcTrackerConfig:
         self.detector_config = DetectorConfig(config)
         self.encoder_config = FeatureEncoderConfig(config)
         self.tracks_manager_config = TracksManagerConfig(config)
+        self.face_id_config = FaceIdConfig(config)

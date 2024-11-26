@@ -15,7 +15,6 @@ results*
 #from pyinstaller
 /main/
 /build/
-main.spec
 /dist/main
 
 

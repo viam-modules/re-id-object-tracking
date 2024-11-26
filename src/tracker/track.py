@@ -1,6 +1,6 @@
 import numpy as np
 from viam.services.vision import Detection
-from asyncio import Lock
+import torch
 
 
 class Track:
@@ -18,20 +18,25 @@ class Track:
 
         :param track_id: Unique identifier for the track.
         :param bbox: Bounding box coordinates [x1, y1, x2, y2].
-        :param feature_vector: Feature vector for re-id matching.
+        :param feature_vector: a CUDA torch Tensor. Feature vector for re-id matching.
         """
         self.track_id = track_id
         self.bbox = np.array(bbox)
         self.predicted_bbox = np.array(bbox)
-        self.feature_vector = np.array(feature_vector)
+        self.feature_vector = feature_vector
         self.age = 0  # Time since the last update
         self.history = [np.array(bbox)]  # Stores past bounding boxes for this track
         self.velocity = np.array([0, 0, 0, 0])  # Initial velocity (no motion)
         self.distance = distance
 
         self.label = label
-        self.label_lock = Lock()
+
         self.label_from_reid = None
+        self.conf_from_reid = 0
+
+        self.label_from_faceid = None
+        self.conf_from_faceid = None
+
         self.persistence: int = 0
         self.is_candidate: bool = is_candidate
         self._is_detected: bool = True
@@ -48,7 +53,7 @@ class Track:
             and np.array_equal(self.feature_vector, other.feature_vector)
         )
 
-    def update(self, bbox, feature_vector, distance):
+    def update(self, bbox, feature_vector: torch.Tensor, distance):
         """
         Update the track with a new bounding box and feature vector.
         Also updates the velocity based on the difference between the last and current bbox.
@@ -60,7 +65,7 @@ class Track:
         bbox = np.array(bbox)
         self.velocity = bbox - self.bbox  # Update velocity
         self.bbox = bbox
-        self.feature_vector = np.array(feature_vector)
+        self.feature_vector = feature_vector
         self.age = 0
         self.history.append(bbox)
         self.predicted_bbox = self.predict()
@@ -152,7 +157,11 @@ class Track:
         )
 
     def serialize(self):
-        return self.track_id, self.bbox.tobytes(), self.feature_vector.tobytes()
+        return (
+            self.track_id,
+            self.bbox.tobytes(),
+            self.feature_vector.cpu().detach().numpy().tobytes(),
+        )
 
     def add_label(self, label_from_reid):
         self.label_from_reid = label_from_reid
@@ -166,6 +175,9 @@ class Track:
     def relabel_reid_label(self, label: str):
         self.label_from_reid = label
 
+    def relabel_faceid_label(self, label: str):
+        self.label_from_faceid = label
+
     def has_label(self) -> bool:
         return self.label is not None
 
@@ -174,6 +186,8 @@ class Track:
             return self.progress_bar(self.persistence, min_persistence)
         if self.label is not None:
             return self.label
+        if self.label_from_faceid is not None:
+            return self.label_from_faceid
         if self.label_from_reid is not None:
             return self.label_from_reid
         return self.track_id
@@ -208,3 +222,13 @@ class Track:
 
     def is_detected(self):
         return self._is_detected
+
+    def get_all(self):
+        answer = {
+            "face_id_label": self.label_from_faceid,
+            "face_id_conf": self.conf_from_faceid,
+            "re_id_label": self.label_from_reid,
+            "re_id_conf": self.conf_from_reid,
+            "manual_label": self.label,
+        }
+        return answer

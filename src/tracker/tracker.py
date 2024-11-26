@@ -5,7 +5,6 @@ from asyncio import Event, create_task, sleep
 from typing import Dict, List
 from copy import deepcopy
 
-import cv2
 import numpy as np
 from PIL import Image
 from scipy.optimize import linear_sum_assignment
@@ -14,12 +13,15 @@ from viam.logging import getLogger
 from viam.media.video import CameraMimeType
 
 from src.config.config import ReIDObjetcTrackerConfig
-from src.tracker.detector import Detector
-from src.tracker.encoder import FeatureEncoder
+from src.tracker.detector.detector import Detector, get_detector
+from src.tracker.encoder.feature_encoder import FeatureEncoder, get_encoder
+from src.tracker.face_id.identifier import FaceIdentifier
 from src.tracker.track import Track
 from src.tracker.tracks_manager import TracksManager
-from src.utils import decode_image, log_cost_matrix, log_tracks_info
+from src.utils import log_cost_matrix, log_tracks_info
 from viam.proto.service.vision import Detection
+from src.image.image import ImageObject
+import torch
 
 LOGGER = getLogger(__name__)
 
@@ -40,14 +42,18 @@ class Tracker:
         self.distance = cfg.tracker_config.feature_distance_metric.value
         self.sleep_period = 1 / (cfg.tracker_config.max_frequency.value)
 
-        self.detector = Detector(cfg.detector_config)
-        self.encoder = FeatureEncoder(cfg.encoder_config)
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+        self.detector: Detector = get_detector(cfg.detector_config)
+        self.encoder: FeatureEncoder = get_encoder(cfg.encoder_config)
+        self.face_identifier: FaceIdentifier = FaceIdentifier(cfg.face_id_config)
 
         self.tracks: Dict[str, Track] = {}
 
         self.track_candidates: List[Track] = []
         self.tracks_manager = TracksManager(cfg.tracks_manager_config)
         self.start_fresh: bool = cfg.tracker_config.start_fresh.value
+        self.save_to_db: bool = cfg.tracker_config.save_to_db.value
 
         self.minimum_track_persistance: int = (
             cfg.tracker_config.min_track_persistence.value
@@ -57,7 +63,9 @@ class Tracker:
 
         self.track_ids_with_label: Dict[str, List[str]] = {}
 
-        self.labeled_embeddings: Dict[str, List[np.ndarray]] = {}
+        self.labeled_person_embeddings: Dict[str, List[torch.Tensor]] = {}
+        self.path_to_known_persons = cfg.tracker_config.path_to_known_persons.value
+
         self.reid_threshold = cfg.tracker_config.re_id_threshold.value
 
         self.current_tracks_id = set()
@@ -69,13 +77,11 @@ class Tracker:
         self.stop_event = Event()
 
         self.debug = debug
-        self.color_map = {}
-        self.colormap = cv2.applyColorMap(
-            np.arange(256, dtype=np.uint8).reshape(1, -1), cv2.COLORMAP_COOL
-        )[0]
         self.count = 0
 
         self.start_background_loop = cfg.tracker_config._start_background_loop
+
+        self.compute_known_persons_embeddings()
 
     def start(self):
         if not self.start_fresh:
@@ -138,7 +144,7 @@ class Tracker:
             viam_img = await self.camera.get_image(mime_type=CameraMimeType.JPEG)
         except:
             return None
-        return decode_image(viam_img)
+        return ImageObject(viam_img, self.device)
 
     def relabel_tracks(self, dict_old_label_new_label: Dict[str, str]):
         answer = dict_old_label_new_label
@@ -165,7 +171,10 @@ class Tracker:
 
             del self.track_ids_with_label[old_label]
             answer[old_label] = f"success: changed label to '{new_label}'"
-        self.tracks_manager.write_track_ids_with_label_on_db(self.track_ids_with_label)
+        if self.save_to_db:
+            self.tracks_manager.write_track_ids_with_label_on_db(
+                self.track_ids_with_label
+            )
         return answer
 
     def get_current_detections(self):
@@ -186,7 +195,10 @@ class Tracker:
     async def is_new_object_detected(self):
         return self.new_object_event.is_set()
 
-    def update(self, img, visualize: bool = False):
+    def update(
+        self,
+        img: ImageObject,
+    ):
         """
         Update the tracker with new detections.
 
@@ -306,18 +318,11 @@ class Tracker:
                     if track_candidate.is_detected()
                 ]
 
-        # # Create new tracks for unmatched detections
-        # for detection_idx in unmatched_detections:
-        #     new_track_id = self.add_track(
-        #         detection=detections[detection_idx],
-        #         feature_vector=features_vectors[detection_idx],
-        #     )
-        #     new_tracks_ids.add(new_track_id)
-
         self.current_tracks_id = updated_tracks_ids.union(new_tracks_ids)
         self.current_track_candidates = current_track_candidates
 
         self.increment_age_and_delete_tracks(updated_tracks_ids)
+        self.face_identify_tracks(img, self.current_tracks_id)
 
         # Try to identify tracks that got a new embedding
         self.identify_tracks(self.current_tracks_id)
@@ -330,9 +335,10 @@ class Tracker:
 
         # Write only the updated tracks on the db
         # TODO: only pass updated tracks so we don't serialize everytime
-        if self.count % self.tracks_manager.save_period.value == 0:
-            self.tracks_manager.write_tracks_on_db(self.tracks)
-            self.tracks_manager.write_category_count_on_db(self.category_count)
+        if self.save_to_db:
+            if self.count % self.tracks_manager.save_period.value == 0:
+                self.tracks_manager.write_tracks_on_db(self.tracks)
+                self.tracks_manager.write_category_count_on_db(self.category_count)
 
         if self.debug:
             log_tracks_info(
@@ -345,35 +351,6 @@ class Tracker:
                 track_ids=list(self.tracks.keys()),
                 iteration_number=self.count,
             )
-
-        if visualize:
-            bgr_image = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-
-            for track_id in self.current_tracks_id:
-                track = self.tracks[track_id]
-                x1, y1, x2, y2 = track.bbox
-
-                if track_id not in self.color_map:
-                    self.color_map[track_id] = self.get_color_from_colormap(track_id)
-
-                color = self.color_map[track_id]
-
-                cv2.rectangle(
-                    bgr_image, (int(x1), int(y1)), (int(x2), int(y2)), color, 2
-                )
-                # Put the score on the top-left corner of the bounding box
-                cv2.putText(
-                    bgr_image,
-                    f"{track_id}",
-                    (int(x1), int(y1) - 10),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.75,
-                    color,
-                    2,
-                )
-
-            # Save the image with the detections
-            cv2.imwrite(f"./results/result_{self.count}.png", bgr_image)
 
     def get_matching_tracks(
         self, tracks: Dict[str, Track], detections: List[Detection], feature_vectors
@@ -419,7 +396,7 @@ class Tracker:
         row_indices, col_indices = linear_sum_assignment(cost_matrix)
         return row_indices, col_indices, cost_matrix
 
-    def add_track_candidate(self, detection, feature_vector):
+    def add_track_candidate(self, detection, feature_vector: torch.Tensor):
         new_track_candidate = Track(
             track_id=detection.category,
             bbox=detection.bbox,
@@ -457,34 +434,6 @@ class Tracker:
             track.unset_is_detected()
         for track in self.track_candidates:
             track.unset_is_detected()
-
-    def get_color_from_colormap(self, track_id):
-        # Use the track_id to select a color from the colormap
-        # Track_id modulo 256 to ensure it's within the range of the colormap
-        track_id_int = hash(track_id) % 256
-
-        # Use the hashed track_id to select a color from the colormap
-        return tuple(int(c) for c in self.colormap[track_id_int])
-
-    def add_track(self, detection, feature_vector, distance=0):
-        """
-        Add a new track to the tracker using a Detection object.
-
-        :param detection: Detection object containing bbox, score, and category.
-        """
-        # Generate a unique track ID
-        track_id = self.generate_track_id(detection.category)
-        # Create a new Track object and store it in the dictionary
-        self.tracks[track_id] = Track(
-            track_id=track_id,
-            bbox=detection.bbox,
-            feature_vector=feature_vector,
-            distance=distance,
-        )
-
-        # Add track_id as label in the beginning
-        self.track_ids_with_label[track_id] = [track_id]
-        return track_id
 
     def increment_age_and_delete_tracks(self, updated_tracks_ids=[]):
         # Remove or age out tracks that were not updated
@@ -525,7 +474,7 @@ class Tracker:
                     )  # TODO: integrate this warning in the answer of the do_cmd
                     continue
                 embeddings += self.encoder.compute_features(img, detections)
-            self.labeled_embeddings[label] = embeddings
+            self.labeled_person_embeddings[label] = embeddings
             answer[label] = (
                 f"sucess adding {label}, found {len(embeddings)} embeddings."
             )
@@ -535,10 +484,10 @@ class Tracker:
         # TODO: check input here
         answer = {}
         for label in cmd:
-            if label not in self.labeled_embeddings:
+            if label not in self.labeled_person_embeddings:
                 answer[label] = f"can't find person {label}"
                 continue
-            del self.labeled_embeddings[label]
+            del self.labeled_person_embeddings[label]
             answer[label] = f"success deleting: {label}"
 
         return answer
@@ -548,6 +497,20 @@ class Tracker:
         for label, track_ids in self.track_ids_with_label.items():
             for track_id in track_ids:
                 answer.append(self.generate_person_data(label=label, id=track_id))
+        return answer
+
+    def list_current(self):
+        answer = {}
+        for track_id in self.tracks:
+            track = self.tracks[track_id]
+            if track.is_detected():
+                answer[track_id] = track.get_all()
+        return answer
+
+    def recompute_embeddings(self):
+        self.face_identifier.compute_known_embeddings()
+        self.compute_known_persons_embeddings()
+        answer = "embeddings successfully recomputed"
         return answer
 
     @staticmethod
@@ -582,6 +545,49 @@ class Tracker:
 
         return track_id
 
+    def compute_known_persons_embeddings(self):
+        """
+        Computes embeddings for known faces from the picture directory.
+        """
+
+        path_to_known_faces = self.path_to_known_persons
+        all_entries = os.listdir(path_to_known_faces)
+        directories = [
+            entry
+            for entry in all_entries
+            if os.path.isdir(os.path.join(path_to_known_faces, entry))
+        ]
+        for directory in directories:
+            label_path = os.path.join(path_to_known_faces, directory)
+            embeddings = []
+            for file in os.listdir(label_path):
+                if (
+                    (".jpg" in file.lower())
+                    or (".jpeg" in file.lower())
+                    or (".png" in file.lower())
+                ):
+                    im = Image.open(label_path + "/" + file).convert("RGB")
+                    img_obj = ImageObject(viam_image=None, pil_image=im)
+
+                    detections = self.detector.detect(img_obj)
+
+                    if not detections:
+                        continue
+
+                    # Compute feature vectors for the current detections
+                    batched_features_vectors = self.encoder.compute_features(
+                        img_obj, detections
+                    )
+                    list_of_tensors = list(batched_features_vectors.unbind(dim=0))
+                    embeddings += list_of_tensors
+                else:
+                    LOGGER.warning(
+                        "Ignoring unsupported file type: %s. Only .jpg, .jpeg, and .png files are supported.",  # pylint: disable=line-too-long
+                        file,
+                    )
+
+            self.labeled_person_embeddings[directory] = embeddings
+
     def identify_tracks(self, track_ids):
         """
         Args:
@@ -595,7 +601,7 @@ class Tracker:
                 continue
             track_embedding = track.get_embedding()
             found_match = False
-            for label, embeddings in self.labeled_embeddings.items():
+            for label, embeddings in self.labeled_person_embeddings.items():
                 if label == track.label_from_reid:
                     continue
 
@@ -606,29 +612,44 @@ class Tracker:
 
                     if feature_dist < self.reid_threshold:
                         found_match = True
-                        old_label = track._get_label()
-                        track.relabel_reid_label(label)
+                        track.label_from_reid = label
+                        track.conf_from_reid = 1 - feature_dist
+
+                        # old_label = track._get_label()
+                        # track.relabel_reid_label(label)
 
                         # if only one track had the label 'old_label'
-                        if len(self.track_ids_with_label[old_label]) == 1:
-                            if label not in self.track_ids_with_label:
-                                self.track_ids_with_label[label] = (
-                                    self.track_ids_with_label.pop(old_label)
-                                )
-                            else:
-                                self.track_ids_with_label[label].append(track_id)
-                                del self.track_ids_with_label[old_label]
+                        # if len(self.track_ids_with_label[old_label]) == 1:
+                        #     if label not in self.track_ids_with_label:
+                        #         self.track_ids_with_label[label] = (
+                        #             self.track_ids_with_label.pop(old_label)
+                        #         )
+                        #     else:
+                        #         self.track_ids_with_label[label].append(track_id)
+                        #         del self.track_ids_with_label[old_label]
 
-                        else:
-                            self.track_ids_with_label[old_label].remove(track_id)
-                            if label not in self.track_ids_with_label:
-                                self.track_ids_with_label[label] = [track_id]
-                            else:
-                                self.track_ids_with_label[label].append(track_id)
+                        # else:
+                        #     self.track_ids_with_label[old_label].remove(track_id)
+                        #     if label not in self.track_ids_with_label:
+                        #         self.track_ids_with_label[label] = [track_id]
+                        #     else:
+                        #         self.track_ids_with_label[label].append(track_id)
 
                         break
                 if found_match:
                     break
+
+    def face_identify_tracks(self, img: ImageObject, track_ids: List[str]):
+        if len(track_ids) < 1:
+            return
+        for track_id in track_ids:
+            track = self.tracks[track_id]
+            new_face_id_label, new_face_id_conf = self.face_identifier.get_match(
+                img, track
+            )
+            if new_face_id_label is not None:
+                track.label_from_faceid = new_face_id_label
+                track.conf_from_faceid = new_face_id_conf
 
 
 class NewObjectNotifier:

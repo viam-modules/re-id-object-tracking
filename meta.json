@@ -10,6 +10,6 @@
       "model": "viam:vision:re-id-object-tracker"
     }
   ],
-  "entrypoint": "dist/main",
-  "first_run": "dist/first_run.sh"
+  "entrypoint": "main",
+  "first_run": "first_run.sh"
 }

@@ -1,10 +1,10 @@
 from viam.proto.app.robot import ServiceConfig
 
 from src.config.attribute import (
+    BoolAttribute,
     FloatAttribute,
     IntAttribute,
     StringAttribute,
-    BoolAttribute,
 )
 
 

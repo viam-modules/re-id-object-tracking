@@ -2,26 +2,26 @@ import asyncio
 import datetime
 import os
 from asyncio import Event, create_task, sleep
-from typing import Dict, List
 from copy import deepcopy
+from typing import Dict, List
 
 import numpy as np
+import torch
 from PIL import Image
 from scipy.optimize import linear_sum_assignment
 from viam.components.camera import CameraClient
 from viam.logging import getLogger
 from viam.media.video import CameraMimeType
+from viam.proto.service.vision import Detection
 
 from src.config.config import ReIDObjetcTrackerConfig
+from src.image.image import ImageObject
 from src.tracker.detector.detector import Detector, get_detector
 from src.tracker.encoder.feature_encoder import FeatureEncoder, get_encoder
 from src.tracker.face_id.identifier import FaceIdentifier
 from src.tracker.track import Track
 from src.tracker.tracks_manager import TracksManager
 from src.utils import log_cost_matrix, log_tracks_info
-from viam.proto.service.vision import Detection
-from src.image.image import ImageObject
-import torch
 
 LOGGER = getLogger(__name__)
 

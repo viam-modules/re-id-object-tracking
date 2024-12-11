@@ -1,9 +1,10 @@
-from viam.media.video import ViamImage
+import io
 from typing import Dict, List
+
 import numpy as np
 import torch
 from PIL import Image
-import io
+from viam.media.video import ViamImage
 
 
 def get_tensor_from_np_array(np_array: np.ndarray) -> torch.Tensor:

@@ -1,5 +1,5 @@
 import os
-from typing import List, Dict
+from typing import Dict, List
 
 import cv2
 import mediapipe as mp
@@ -7,8 +7,8 @@ import numpy as np
 from mediapipe.tasks.python import vision
 
 from src.config.config import DetectorConfig
-from src.utils import resource_path
 from src.tracker.detector.detection import Detection
+from src.utils import resource_path
 
 
 class DetectorModelConfig:

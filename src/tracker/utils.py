@@ -1,7 +1,6 @@
 import torch
-from PIL import Image
-
 import torch.nn.functional as F
+from PIL import Image
 
 
 def save_tensor(tensor: torch.Tensor, path):

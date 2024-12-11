@@ -1,4 +1,5 @@
 # pylint: disable=missing-module-docstring
+import logging
 import os
 import sys
 from io import BytesIO
@@ -6,10 +7,9 @@ from typing import Union
 
 import numpy as np
 from PIL import Image
+from tabulate import tabulate
 from viam.logging import getLogger
 from viam.media.video import CameraMimeType, ViamImage
-import logging
-from tabulate import tabulate
 
 LOGGER = getLogger(__name__)
 SUPPORTED_IMAGE_TYPE = [

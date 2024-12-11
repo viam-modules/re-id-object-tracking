@@ -3,8 +3,8 @@ This module provides a Viam Vision Service module
 to perform face Re-Id.
 """
 
-from asyncio import create_task
 import asyncio
+from asyncio import create_task
 from typing import Any, ClassVar, Dict, List, Mapping, Optional, Sequence
 
 from typing_extensions import Self

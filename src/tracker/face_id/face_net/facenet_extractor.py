@@ -1,15 +1,17 @@
-import torch
-import numpy as np
-from src.config.config import FaceIdConfig
-import onnxruntime as ort
 import os
-from src.utils import resource_path
 from typing import Dict, Tuple
-from src.tracker.utils import (
-    resize_for_padding,
-    pad_image_to_target_size,
-)
+
+import numpy as np
+import onnxruntime as ort
+import torch
+
+from src.config.config import FaceIdConfig
 from src.tracker.face_id.face_net.inception_resnet_v1 import InceptionResnetV1
+from src.tracker.utils import (
+    pad_image_to_target_size,
+    resize_for_padding,
+)
+from src.utils import resource_path
 
 
 class EncoderModelConfig:

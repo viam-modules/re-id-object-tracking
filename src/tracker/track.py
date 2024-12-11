@@ -1,6 +1,6 @@
 import numpy as np
-from viam.services.vision import Detection
 import torch
+from viam.services.vision import Detection
 
 
 class Track:

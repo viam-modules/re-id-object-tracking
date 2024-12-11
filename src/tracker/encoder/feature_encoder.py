@@ -1,9 +1,11 @@
 from abc import ABC, abstractmethod
-import numpy as np
 from typing import List
+
+import numpy as np
+import torch
+
 from src.config.config import FeatureEncoderConfig
 from src.tracker.detector.detection import Detection
-import torch
 
 
 class FeatureEncoder(ABC):

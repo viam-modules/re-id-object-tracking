@@ -1,25 +1,21 @@
-import onnxruntime as ort
-import numpy as np
-import torch
-from src.config.config import FaceIdConfig
-from src.tracker.track import Track
-from src.image.image import ImageObject
-import torch.nn.functional as F
-from src.utils import resource_path
-from typing import Tuple, Dict
 import os
-from torchvision.utils import save_image
+from typing import Dict, Tuple
 
-from torchvision.io import write_png
+import numpy as np
+import onnxruntime as ort
+import torch
 
-from PIL import Image
+from src.config.config import FaceIdConfig
+from src.image.image import ImageObject
+from src.tracker.track import Track
 from src.tracker.utils import (
-    save_tensor,
-    resize_for_padding,
+    get_cropped_tensor,
     pad_image_to_target_size,
     padded_to_original_coordinates,
-    get_cropped_tensor,
+    resize_for_padding,
+    save_tensor,
 )
+from src.utils import resource_path
 
 ULTRA_FACE_REPO = "ultraface"
 

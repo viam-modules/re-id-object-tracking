@@ -8,10 +8,19 @@ face embeddings.
 
 import math
 import os
+from typing import Tuple
 
 import numpy as np
+import torch
 from PIL import Image
 from viam.logging import getLogger
+
+from src.config.config import FaceIdConfig
+from src.image.image import ImageObject
+from src.tracker.face_id.face_detector import FaceDetector
+
+# from src.tracker.face_id.face_features_extractor import FaceFeaturesExtractor
+from src.tracker.face_id.face_net.facenet_extractor import FaceFeaturesExtractor
 
 # from src.distance import cosine_distance, distance_norm_l1, distance_norm_l2
 # from src.encoder import Encoder
@@ -19,14 +28,6 @@ from viam.logging import getLogger
 # from src.models import utils
 # from src.utils import check_ir, dist_to_conf_sigmoid
 from src.tracker.track import Track
-from src.config.config import FaceIdConfig
-from typing import Tuple
-from src.image.image import ImageObject
-from src.tracker.face_id.face_detector import FaceDetector
-
-# from src.tracker.face_id.face_features_extractor import FaceFeaturesExtractor
-from src.tracker.face_id.face_net.facenet_extractor import FaceFeaturesExtractor
-import torch
 from src.tracker.utils import save_tensor
 
 LOGGER = getLogger(__name__)

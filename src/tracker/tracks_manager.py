@@ -1,10 +1,12 @@
-from src.tracker.track import Track
-from typing import Dict, List
-import sqlite3
-import numpy as np
-from src.config.config import TracksManagerConfig
 import json
+import sqlite3
+from typing import Dict, List
+
+import numpy as np
 import torch
+
+from src.config.config import TracksManagerConfig
+from src.tracker.track import Track
 
 tables: Dict[str, str] = {
     "tracks": """

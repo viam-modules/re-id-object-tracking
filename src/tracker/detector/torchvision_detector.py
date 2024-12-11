@@ -1,19 +1,18 @@
-import torchvision
+import ssl
+from typing import Dict, List
+
 import torch
-
-
-import os
-from typing import List, Dict
-
-
-from src.config.config import DetectorConfig
-from src.utils import resource_path
-from src.tracker.detector.detection import Detection
-from src.tracker.detector.detector import Detector
-from src.image.image import ImageObject
+import torchvision
 from torchvision.models.detection import (
     FasterRCNN_MobileNet_V3_Large_320_FPN_Weights,
 )
+
+from src.config.config import DetectorConfig
+from src.image.image import ImageObject
+from src.tracker.detector.detection import Detection
+from src.tracker.detector.detector import Detector
+
+ssl._create_default_https_context = ssl._create_unverified_context
 
 
 class TorchvisionDetector(Detector):

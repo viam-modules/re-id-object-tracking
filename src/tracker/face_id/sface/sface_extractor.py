@@ -1,18 +1,20 @@
-import torch
-import numpy as np
-from src.config.config import FaceIdConfig
-import onnxruntime as ort
 import os
-from src.utils import resource_path
 from typing import Dict, Tuple
+
+import numpy as np
+import onnxruntime as ort
+import torch
+from scipy.spatial.distance import cityblock, cosine, euclidean
+
+from src.config.config import FaceIdConfig
 from src.tracker.utils import (
-    save_tensor,
-    resize_for_padding,
+    get_cropped_tensor,
     pad_image_to_target_size,
     padded_to_original_coordinates,
-    get_cropped_tensor,
+    resize_for_padding,
+    save_tensor,
 )
-from scipy.spatial.distance import cityblock, cosine, euclidean
+from src.utils import resource_path
 
 
 class EncoderModelConfig:

@@ -142,25 +142,49 @@ Recomputes embeddings.
 | `save_period`      | int    | Optional     | `20`    | Interval (in number of tracking steps) when tracks are saved to the database.               |
 
 
-## PyInstaller build instructions
-*in progress*
-<!-- Run this to create your virtual environment:
-```
-./setup.sh
+## PyInstaller Build Process
+
+This project includes a `Makefile` and a `build_installer.sh` script to automate the PyInstaller build process. PyInstaller is used to create standalone executables from the Python module scripts.
+
+### Available Commands
+
+#### 1. `pyinstaller`
+This command builds the project using PyInstaller and custom build paths.
+
+##### How it works:
+- It runs the `build_installer.sh` script, passing the custom `WORKPATH` and `DISTPATH` environment variables that define where the build artifacts and the final executable will be placed.
+- If no values for `WORKPATH` and `DISTPATH` are specified, it uses the default paths defined in the `Makefile`:
+  - `WORKPATH`: `./pyinstaller_build`
+  - `DISTPATH`: `./pyinstaller_dist`
+
+##### Usage:
+
+To build the project with the default paths:
+
+```bash
+make pyinstaller
 ```
 
-Run this to create your virtual environment:
-Activate it bby running:
-```
-source .venv/bin/activate
-```
-
-Make sure that the requirements are installed:
-```
-pip3 install -r requirements.txt
+To build the project with custom paths:
+```bash
+make pyinstaller WORKPATH=/path/to/custom_build DISTPATH=/path/to/custom_dist
 ```
 
-Build the executable `dist/main`
+
+#### 2. `clean-pyinstaller`
+
+This command removes the directories used by PyInstaller to store the build artifacts and distribution files. It's helpful for cleaning up the project and starting fresh.
+
+##### Usage:
+
+To build the project with the default paths:
+
+```bash
+make clean-pyinstaller
 ```
-python -m PyInstaller --onefile --hidden-import="googleapiclient" --add-data "./src/models/checkpoints:checkpoints"  src/main.py
-``` -->
+
+To clean up with custom paths:
+```bash
+make clean-pyinstaller WORKPATH=/path/to/custom_build DISTPATH=/path/to/custom_dist
+```
+

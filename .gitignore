@@ -12,10 +12,7 @@ results*
 #ignore models
 /src/models/
 
-#from pyinstaller
-/main/
-/build/
-/dist/main
+
 
 
  

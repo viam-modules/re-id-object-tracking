@@ -33,7 +33,7 @@ The following attributes are required to configure your `re-id-object-tracker` m
 ```json
 {
   "camera_name": "camera-1",
-  "path_to_database": "/path/to/database.db" #the file doesn't need to exists
+  "path_to_database": "/path/to/database.db" # the file doesn't need to exist
 }
 ```
 
@@ -44,13 +44,15 @@ You can invoke these commands by passing appropriately keyed JSON documents to t
 
 
 ### `list_current`
-The `list_current` doCommand is used to get all the informations of the currently detected tracks.
+
+The `list_current` doCommand is used to get all the information of the currently detected tracks.
 
 Input:
 
 ```json
 "list_current": true
 ```
+
 returns:
 ```json
 {
@@ -67,7 +69,8 @@ returns:
 ```
 
 ### `relabel()`
-The object tracker generate by default a unique ID string in the format  `"<category>_N_YYYYMMDD_HHMMSS"`. Given this unique id, the user can add a label to track (attached to the `manual_label` field in the output of `list_current`).
+
+The object tracker generates by default a unique ID string in the format  `"<category>_N_YYYYMMDD_HHMMSS"`. Given this unique id, the user can add a label to track (attached to the `manual_label` field in the output of `list_current`).
 
 ```json
 "relabel": {"person_N_20241126_190034": "Known Person"}
@@ -83,6 +86,7 @@ returns:
 
 
 ### `recompute_embeddings`
+
 Recomputes embeddings.
 ```json
 "recompute_embeddings": true
@@ -128,9 +132,9 @@ Recomputes embeddings.
 | ------------------------- | ------ | --------- | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | `path_to_known_faces`     | string | Optional  | `None`                              | Path to a file or database containing images or embeddings of known faces.                                       |
 | `face_detector_device`    | string | Optional  | `'cpu'`                             | Device on which the face detector will run. Options are `cpu` and `cuda`.                                         |
-| `face_detector_model`     | string | Optional  | `'ultraface_version-RFB-320-int8'` | Name of the model used for face detection.  Only option at the moment.                                                                        |
+| `face_detector_model`     | string | Optional  | `'ultraface_version-RFB-320-int8'` | Name of the model used for face detection. Only option at the moment.                                                                        |
 | `face_detection_threshold`| float  | Optional  | `0.9`                               | Confidence threshold for detecting faces, with values ranging from 0.0 to 1.0.                                   |
-| `face_feature_extractor_model` | string | Optional | `'facenet'` | Model used for extracting features from detected faces for identification.  Only option at the moment.                                      |
+| `face_feature_extractor_model` | string | Optional | `'facenet'` | Model used for extracting features from detected faces for identification. Only option at the moment.                                      |
 | `cosine_id_threshold`     | float  | Optional  | `0.3`                               | Threshold for determining face identity matches using cosine similarity.                                              |
 | `euclidean_id_threshold`  | float  | Optional  | `0.9`                               | Threshold for determining face identity matches using Euclidean distance.                                             |
 

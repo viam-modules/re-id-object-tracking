@@ -222,9 +222,10 @@ class ChannelGate(nn.Module):
 
 
 class OSBlock(nn.Module):
-    """Omni-scale feature learning block."""
+    """Omni-scale feature learning block with optional instance normalization."""
 
-    def __init__(self, in_channels, out_channels, reduction=4, T=4, **kwargs):
+    def __init__(self, in_channels, out_channels, reduction=4, T=4,
+                 normalize_instance=False, **kwargs):
         super(OSBlock, self).__init__()
         assert T >= 1
         assert out_channels >= reduction and out_channels % reduction == 0
@@ -239,6 +240,10 @@ class OSBlock(nn.Module):
         self.downsample = None
         if in_channels != out_channels:
             self.downsample = Conv1x1Linear(in_channels, out_channels)
+        if normalize_instance:
+            self.IN = nn.InstanceNorm2d(out_channels, affine=True)
+        else:
+            self.IN = lambda x: x  # When normalizing, don't actually do it
 
     def forward(self, x):
         identity = x
@@ -248,45 +253,19 @@ class OSBlock(nn.Module):
             x2_t = conv2_t(x1)
             x2 = x2 + self.gate(x2_t)
         x3 = self.conv3(x2)
+        x3 = self.IN(x3)  # IN inside residual, if we're supposed to
         if self.downsample is not None:
             identity = self.downsample(identity)
         out = x3 + identity
         return F.relu(out)
 
 
-class OSBlockINin(nn.Module):
+class OSBlockINin(OSBlock):
     """Omni-scale feature learning block with instance normalization."""
 
     def __init__(self, in_channels, out_channels, reduction=4, T=4, **kwargs):
-        super(OSBlockINin, self).__init__()
-        assert T >= 1
-        assert out_channels >= reduction and out_channels % reduction == 0
-        mid_channels = out_channels // reduction
-
-        self.conv1 = Conv1x1(in_channels, mid_channels)
-        self.conv2 = nn.ModuleList()
-        for t in range(1, T + 1):
-            self.conv2 += [LightConvStream(mid_channels, mid_channels, t)]
-        self.gate = ChannelGate(mid_channels)
-        self.conv3 = Conv1x1Linear(mid_channels, out_channels, bn=False)
-        self.downsample = None
-        if in_channels != out_channels:
-            self.downsample = Conv1x1Linear(in_channels, out_channels)
-        self.IN = nn.InstanceNorm2d(out_channels, affine=True)
-
-    def forward(self, x):
-        identity = x
-        x1 = self.conv1(x)
-        x2 = 0
-        for conv2_t in self.conv2:
-            x2_t = conv2_t(x1)
-            x2 = x2 + self.gate(x2_t)
-        x3 = self.conv3(x2)
-        x3 = self.IN(x3)  # IN inside residual
-        if self.downsample is not None:
-            identity = self.downsample(identity)
-        out = x3 + identity
-        return F.relu(out)
+        super(OSBlockINin, self).__init__(in_channels, out_channels, reduction,
+                                          T, normalize_instance=True, **kwargs)
 
 
 ##########
@@ -504,77 +483,28 @@ def init_pretrained_weights(model, key=""):
 ##########
 # Instantiation
 ##########
-def osnet_ain_x1_0(num_classes=1000, pretrained=True, loss="softmax", **kwargs):
-    model = OSNet(
-        num_classes,
-        blocks=[
-            [OSBlockINin, OSBlockINin],
-            [OSBlock, OSBlockINin],
-            [OSBlockINin, OSBlock],
-        ],
-        layers=[2, 2, 2],
-        channels=[64, 256, 384, 512],
-        loss=loss,
-        conv1_IN=True,
-        **kwargs,
-    )
-    if pretrained:
-        init_pretrained_weights(model, key="osnet_ain_x1_0")
-    return model
+def create_osnet_ain(channels, name):
+    def osnet_ain(num_classes=1000, pretrained=True, loss="softmax", **kwargs):
+        model = OSNet(
+            num_classes,
+            blocks=[
+                [OSBlockINin, OSBlockINin],
+                [OSBlock, OSBlockINin],
+                [OSBlockINin, OSBlock],
+            ],
+            layers=[2, 2, 2],
+            channels=channels,
+            loss=loss,
+            conv1_IN=True,
+            **kwargs,
+        )
+        if pretrained:
+            init_pretrained_weights(model, key=name)
+        return model
+    return osnet_ain
 
 
-def osnet_ain_x0_75(num_classes=1000, pretrained=True, loss="softmax", **kwargs):
-    model = OSNet(
-        num_classes,
-        blocks=[
-            [OSBlockINin, OSBlockINin],
-            [OSBlock, OSBlockINin],
-            [OSBlockINin, OSBlock],
-        ],
-        layers=[2, 2, 2],
-        channels=[48, 192, 288, 384],
-        loss=loss,
-        conv1_IN=True,
-        **kwargs,
-    )
-    if pretrained:
-        init_pretrained_weights(model, key="osnet_ain_x0_75")
-    return model
-
-
-def osnet_ain_x0_5(num_classes=1000, pretrained=True, loss="softmax", **kwargs):
-    model = OSNet(
-        num_classes,
-        blocks=[
-            [OSBlockINin, OSBlockINin],
-            [OSBlock, OSBlockINin],
-            [OSBlockINin, OSBlock],
-        ],
-        layers=[2, 2, 2],
-        channels=[32, 128, 192, 256],
-        loss=loss,
-        conv1_IN=True,
-        **kwargs,
-    )
-    if pretrained:
-        init_pretrained_weights(model, key="osnet_ain_x0_5")
-    return model
-
-
-def osnet_ain_x0_25(num_classes=1000, pretrained=True, loss="softmax", **kwargs):
-    model = OSNet(
-        num_classes,
-        blocks=[
-            [OSBlockINin, OSBlockINin],
-            [OSBlock, OSBlockINin],
-            [OSBlockINin, OSBlock],
-        ],
-        layers=[2, 2, 2],
-        channels=[16, 64, 96, 128],
-        loss=loss,
-        conv1_IN=True,
-        **kwargs,
-    )
-    if pretrained:
-        init_pretrained_weights(model, key="osnet_ain_x0_25")
-    return model
+osnet_ain_x1_0  = create_osnet_ain([64, 256, 384, 512], "osnet_ain_x1_0")
+osnet_ain_x0_75 = create_osnet_ain([48, 192, 288, 384], "osnet_ain_x0_75")
+osnet_ain_x0_5  = create_osnet_ain([32, 128, 192, 256], "osnet_ain_x0_5")
+osnet_ain_x0_25 = create_osnet_ain([16,  64,  96, 128], "osnet_ain_x0_25")

@@ -148,7 +148,7 @@ class BoolAttribute(Attribute):
         field_name: str,
         config: "ServiceConfig",
         required: bool = False,
-        default_value: Optional[str] = None,
+        default_value: Optional[bool] = None,
     ):
         super().__init__(field_name, config, required, default_value)
 

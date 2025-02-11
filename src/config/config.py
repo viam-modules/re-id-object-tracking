@@ -34,8 +34,8 @@ class TrackerConfig:
             field_name="max_age_track",
             config=config,
             min_value=0,
-            max_value=1e5,
-            default_value=1e3,
+            max_value=100000,
+            default_value=1000,
         )
         self.min_distance_threshold = FloatAttribute(
             field_name="min_distance_threshold",

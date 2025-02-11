@@ -144,7 +144,7 @@ class Track:
     def get_detection(self, min_persistence=None) -> Detection:
         if self.is_candidate:
             if min_persistence is None:
-                return ValueError(
+                raise ValueError(
                     "Need to pass persistence in argument to get track candidate"
                 )
             class_name = self._get_label(min_persistence)

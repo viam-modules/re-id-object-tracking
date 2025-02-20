@@ -28,12 +28,13 @@ Navigate to the [**CONFIGURE** tab](https://docs.viam.com/configure/) of your [m
 
 ### Attributes description
 
-The following attributes are required to configure your `re-id-object-tracker` module:
+The following attributes are required to configure your `re-id-object-tracker` module. If the
+database file does not exist yet, it will be created.
 
 ```json
 {
   "camera_name": "camera-1",
-  "path_to_database": "/path/to/database.db" # the file doesn't need to exist
+  "path_to_database": "/path/to/database.db"
 }
 ```
 

@@ -83,6 +83,7 @@ returns:
   "relabel": {
     "person_N_20241126_190034": "success: changed label to 'Known Person' "
   }
+}
 ```
 
 

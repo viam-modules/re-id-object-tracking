@@ -11,16 +11,16 @@ To use this module, follow these instructions to [add a module from the Viam Reg
 This module implements the following methods of the [vision service API](https://docs.viam.com/services/vision/#api):
 
 - `GetDetections()`: returns the bounding boxes with the unique id as label and the object detection confidence as confidence.
-- `GetClassifications()`: returns the label `new_object_detected` for an image when a new object enters the scene. 
+- `GetClassifications()`: returns the label `new_object_detected` for an image when a new object enters the scene.
 - `CaptureAllFromCamera()`: returns the next image and detections or classifications all together, given a camera name.
 
 
-## Installation 
+## Installation
 *in progress*
 
 ## Configure your `re-id-object-tracker` vision service
 
-> [!NOTE]  
+> [!NOTE]
 > Before configuring your vision service, you must [create a robot](https://docs.viam.com/manage/fleet/robots/#add-a-new-robot).
 
 Navigate to the [**CONFIGURE** tab](https://docs.viam.com/configure/) of your [machine](https://docs.viam.com/fleet/machines/) in the [Viam app](https://app.viam.com/).
@@ -154,7 +154,7 @@ path
         │   └── zz_1.png
         │   └── zz_2.jpeg
         │   └── zz_3.jpeg
-        │ 
+        │
         └── Jacques_Chirac
         │   └── jacques_1.jpeg
         │
@@ -163,11 +163,11 @@ path
         |   └── vieira.png
         |   └── thuram.jpeg
         |   └── group_picture.jpeg
-        │ 
+        │
         └── Italian_Team
             └── another_group_picture.png
 ```
-<!-- 
+<!--
 ## PyInstaller Build Process
 
 This project includes a `Makefile` and a `build_installer.sh` script to automate the PyInstaller build process. PyInstaller is used to create standalone executables from the Python module scripts.

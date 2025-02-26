@@ -141,6 +141,38 @@ Recomputes embeddings.
 | `cosine_id_threshold`     | float  | Optional  | `0.3`                               | Threshold for determining face identity matches using cosine similarity. Both cosine and euclidean distances should be under threshold for faces to be considered as match.                                          |
 | `euclidean_id_threshold`  | float  | Optional  | `0.9`                               | Threshold for determining face identity matches using Euclidean distance.                                             |
 
+### TracksManagerConfig
+
+| Name               | Type   | Inclusion    | Default | Description                                                                                     |
+| ------------------ | ------ | ------------ | ------- | ------------------------------------------------------------------------------------------------ |
+| `path_to_database` | string | **Required** |         | Path to the database where tracking information is stored.                                       |
+| `save_period`      | int    | Optional     | `20`    | Interval (in number of tracking steps) when tracks are saved to the database.               |
+
+
+## Makefile (arm-jetson machines only)
+
+This project includes a `Makefile` script to automate the PyInstaller build process. PyInstaller is used to create standalone executables from the Python module scripts.
+
+####  `make setup`
+
+1. install system dependencies (cuDNN and cuSPARSELt)
+2. create venv environment (under `./build/.venv`)
+3. Get python packages wheel files - Torch, ONNXRuntime-GPU, Torchvision (built from source)
+
+Cleaned with `make clean` (this also deletes pyinstaller build directory)
+
+#### `make pyinstaller`
+This command builds the module executable using PyInstaller.
+
+This creates the PyInstaller executable under `./build/pyinstaller_dist`.
+To upload to viam registry:
+```bash
+viam login
+tar -czvf archive.tar.gz meta.json main first_run.sh  #needs to be on the same level
+viam module upload --version 0.0.0-rc0 --platform linux/arm64 --tags 'jetpack:6' archive.tar.gz
+```
+
+Cleaned with `make clean-pyinstaller`
 
 
 ### Example of directory tree

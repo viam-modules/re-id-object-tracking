@@ -18,6 +18,36 @@ check_cudnn() {
 install_cudnn() {
     echo "Starting the installation of cuDNN..."
 
+    # Check if CUDA keyring is already installed
+    echo "Checking if cuda-keyring is installed..."
+    if dpkg -l | grep -q cuda-keyring; then
+        echo "cuda-keyring is already installed. Skipping download and installation."
+    else
+        # Download the CUDA keyring package
+        echo "Downloading CUDA keyring package..."
+        wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/arm64/cuda-keyring_1.1-1_all.deb
+
+        # Check if the download was successful
+        if [ $? -ne 0 ]; then
+            echo "Error: Download failed. Please check your internet connection and the URL."
+            exit 1
+        else
+            echo "CUDA keyring package downloaded successfully."
+        fi
+
+        # Install the CUDA keyring package
+        echo "Installing the CUDA keyring package..."
+        sudo dpkg -i cuda-keyring_1.1-1_all.deb
+
+        # Check if the keyring installation was successful
+        if [ $? -ne 0 ]; then
+            echo "Error: Failed to install the CUDA keyring package."
+            exit 1
+        else
+            echo "CUDA keyring package installed successfully."
+        fi
+    fi
+
     # Download the cuDNN package
     echo "Downloading cuDNN package..."
     wget https://developer.download.nvidia.com/compute/cudnn/9.3.0/local_installers/cudnn-local-tegra-repo-ubuntu2204-9.3.0_1.0-1_arm64.deb
@@ -79,4 +109,3 @@ else
 fi
 
 echo "All required libraries for the 're-id-object-tracking' module have been installed successfully."
-

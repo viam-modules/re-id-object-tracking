@@ -1,4 +1,5 @@
 import io
+from typing import Optional
 
 import numpy as np
 import torch
@@ -18,7 +19,12 @@ def get_tensor_from_np_array(np_array: np.ndarray) -> torch.Tensor:
 
 
 class ImageObject:
-    def __init__(self, viam_image: ViamImage, pil_image: Image = None, device=None):
+    def __init__(
+        self,
+        viam_image: ViamImage,
+        pil_image: Optional[Image.Image] = None,
+        device=None
+    ):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         if pil_image is not None:
             self.pil_image = pil_image

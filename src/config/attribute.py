@@ -9,7 +9,7 @@ class Attribute:
         field_name: str,
         config: ServiceConfig,
         required: bool = False,
-        default_value: Any = None,
+        default_value: Optional[Any] = None,
     ):
         self.field_name = field_name
         self.config = config
@@ -41,9 +41,9 @@ class IntAttribute(Attribute):
         field_name: str,
         config: ServiceConfig,
         required: bool = False,
-        min_value: int = None,
-        max_value: int = None,
-        default_value: int = None,
+        min_value: Optional[int] = None,
+        max_value: Optional[int] = None,
+        default_value: Optional[int] = None,
     ):
         self.min_value = min_value
         self.max_value = max_value
@@ -78,9 +78,9 @@ class FloatAttribute(Attribute):
         field_name: str,
         config: ServiceConfig,
         required: bool = False,
-        min_value: float = None,
-        max_value: float = None,
-        default_value: float = None,
+        min_value: Optional[float] = None,
+        max_value: Optional[float] = None,
+        default_value: Optional[float] = None,
     ):
         self.min_value = min_value
         self.max_value = max_value
@@ -113,7 +113,7 @@ class StringAttribute(Attribute):
         config: "ServiceConfig",
         required: bool = False,
         allowlist: Optional[list] = None,
-        default_value: str = None,
+        default_value: Optional[str] = None,
     ):
         self.allowlist = allowlist
         super().__init__(field_name, config, required, default_value)
@@ -148,7 +148,7 @@ class BoolAttribute(Attribute):
         field_name: str,
         config: "ServiceConfig",
         required: bool = False,
-        default_value: str = None,
+        default_value: Optional[bool] = None,
     ):
         super().__init__(field_name, config, required, default_value)
 

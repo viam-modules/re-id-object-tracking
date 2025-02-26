@@ -1,3 +1,5 @@
+from typing import Optional
+
 import numpy as np
 import torch
 from viam.services.vision import Detection
@@ -31,11 +33,11 @@ class Track:
 
         self.label = label
 
-        self.label_from_reid = None
+        self.label_from_reid: Optional[str] = None
         self.conf_from_reid = 0
 
-        self.label_from_faceid = None
-        self.conf_from_faceid = None
+        self.label_from_faceid: Optional[str] = None
+        self.conf_from_faceid: Optional[str]  = None
 
         self.persistence: int = 0
         self.is_candidate: bool = is_candidate
@@ -144,7 +146,7 @@ class Track:
     def get_detection(self, min_persistence=None) -> Detection:
         if self.is_candidate:
             if min_persistence is None:
-                return ValueError(
+                raise ValueError(
                     "Need to pass persistence in argument to get track candidate"
                 )
             class_name = self._get_label(min_persistence)

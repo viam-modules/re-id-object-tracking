@@ -47,7 +47,7 @@ class TrackerConfig:
         self.feature_distance_metric = StringAttribute(
             field_name="feature_distance_metric",
             config=config,
-            default_value="euclidean",
+            default_value="cosine",
             allowlist=["cosine", "euclidean"],
         )
 
@@ -55,7 +55,7 @@ class TrackerConfig:
             field_name="max_frequency_hz",
             config=config,
             default_value=10,
-            min_value=1,
+            min_value=0.1,
             max_value=100,
         )
 
@@ -102,7 +102,7 @@ class DetectorConfig:
             config=config,
             min_value=0.0,
             max_value=1.0,
-            default_value=0.6,
+            default_value=0.8,
         )
         self.device = StringAttribute(
             field_name="detector_device",

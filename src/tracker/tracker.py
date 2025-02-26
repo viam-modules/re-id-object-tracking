@@ -23,7 +23,12 @@ from src.tracker.track import Track
 from src.tracker.tracks_manager import TracksManager
 from src.utils import log_cost_matrix, log_tracks_info
 
+
 LOGGER = getLogger(__name__)
+
+
+class NoPersonDetectedError(Exception):
+    pass
 
 
 class Tracker:
@@ -524,7 +529,7 @@ class Tracker:
 
     def compute_known_persons_embeddings(self):
         """
-        Computes embeddings for known faces from the picture directory.
+        Computes embeddings for known people from the picture directory.
         """
 
         if not self.path_to_known_persons:
@@ -546,31 +551,38 @@ class Tracker:
             label_path = os.path.join(self.path_to_known_persons, directory)
             embeddings = []
             for file in os.listdir(label_path):
-                if (
-                    (".jpg" in file.lower())
-                    or (".jpeg" in file.lower())
-                    or (".png" in file.lower())
-                ):
-                    im = Image.open(label_path + "/" + file).convert("RGB")
-                    img_obj = ImageObject(viam_image=None, pil_image=im)
-
-                    detections = self.detector.detect(img_obj)
-
-                    if not detections:
-                        continue
-
-                    # Compute feature vectors for the current detections
-                    batched_features_vectors = self.encoder.compute_features(
-                        img_obj, detections
-                    )
-                    list_of_tensors = list(batched_features_vectors.unbind(dim=0))
-                    embeddings += list_of_tensors
-                else:
+                if not any(file.lower().endswith(suffix)
+                           for suffix in (".jpg", ".jpeg", ".png")):
                     LOGGER.warning(
                         "Ignoring unsupported file type: %s. Only .jpg, .jpeg, and .png files are supported.",  # pylint: disable=line-too-long
                         file,
                     )
+                    continue
 
+                im = Image.open(label_path + "/" + file).convert("RGB")
+                img_obj = ImageObject(viam_image=None, pil_image=im)
+
+                detections = self.detector.detect(img_obj)
+
+                if not detections:
+                    LOGGER.warning(
+                        f"Unable to find person in {directory}/{file}")
+                    continue
+
+                # Compute feature vectors for the current detections
+                batched_features_vectors = self.encoder.compute_features(
+                    img_obj, detections
+                )
+                list_of_tensors = list(batched_features_vectors.unbind(dim=0))
+                embeddings += list_of_tensors
+                LOGGER.debug(f"Added embedding for {directory}/{file}")
+
+            if not embeddings:
+                raise NoPersonDetectedError(
+                    f"Unable to recognize any person in pictures from "
+                    f"{directory}. Are you sure it contains a picture of a "
+                    f"person?"
+                )
             self.labeled_person_embeddings[directory] = embeddings
 
     def identify_tracks(self, track_ids):

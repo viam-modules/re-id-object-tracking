@@ -1,5 +1,5 @@
 import os
-from typing import Dict, Tuple
+from typing import Dict, Optional, Tuple
 
 import numpy as np
 import onnxruntime as ort
@@ -92,7 +92,7 @@ class FaceDetector:
             save_tensor(cropped_image, "should_be_a_person.png")
         return self.extract_face(cropped_image)
 
-    def extract_face(self, input: torch.Tensor) -> torch.Tensor:
+    def extract_face(self, input: torch.Tensor) -> Optional[torch.Tensor]:
         """
         Returns the box images in the coordinate of the input
         """

@@ -7,7 +7,9 @@
   "models": [
     {
       "api": "rdk:service:vision",
-      "model": "viam:vision:re-id-object-tracker"
+      "model": "viam:vision:re-id-object-tracker",
+      "short_description": "Vision service to identify people in a camera feed",
+      "markdown_link": "README.md#attributes-description"
     }
   ],
   "entrypoint": "main",

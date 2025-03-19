@@ -17,8 +17,6 @@ def load_ordered_images(folder_path: str) -> List[Image.Image]:
 
     # Filter out non-jpg files if necessary and sort the list
     image_files = sorted([f for f in image_files if f.endswith(".jpg")])
-
-    # Load images in order
     images = [Image.open(os.path.join(folder_path, img)) for img in image_files]
 
     return images
@@ -90,3 +88,11 @@ class FakeCamera(Camera):
         :return: A tuple containing the point cloud data.
         """
         raise NotImplementedError
+
+    def get_number_of_images(self) -> int:
+        """
+        Get the number of images in the list or ring buffer.
+
+        :return: The number of images.
+        """
+        return len(self.images)

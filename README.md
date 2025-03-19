@@ -119,7 +119,7 @@ Recomputes embeddings.
 
 | Name                              | Type   | Inclusion    | Default                                 | Description                                                                                                     |
 | --------------------------------- | ------ | ------------ | --------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `detector_model_name`             | string | Optional| `'fasterrcnn_mobilenet_v3_large_320_fpn'` | Name of the model used for detection. Only option at the moment. |
+| `detector_model_name`             | string | Optional| `'fasterrcnn_mobilenet_v3_large_320_fpn'` | Name of the model used for detection. Only option at the moment. Options include `'fasterrcnn_mobilenet_v3_large_320_fpn'` (low resolution)  and `'fasterrcnn_mobilenet_v3_large_fpn'` (high resolution)  |
 | `detection_threshold`             | float  | Optional     | `0.8`                                   | Confidence threshold for detecting objects, with values ranging from 0.0 to 1.0.                                |
 | `detector_device`                 | string | Optional     | `'cpu'`                                 | Device on which the detection model will run. Options are `cpu` and `gpu`.                                      |
 
@@ -201,32 +201,3 @@ path
         └── Italian_Team
             └── another_group_picture.png
 ```
-<!--
-## PyInstaller Build Process
-
-This project includes a `Makefile` and a `build_installer.sh` script to automate the PyInstaller build process. PyInstaller is used to create standalone executables from the Python module scripts.
-
-### available `make` targets
-
-#### 1. `pyinstaller`
-This command builds the module executable using PyInstaller.
-
-##### Usage:
-
-```bash
-make pyinstaller
-```
-
-This creates the PyInstaller executable under `./pyinstaller_dist`
-
-#### 2. `clean-pyinstaller`
-
-This command removes the directories used by PyInstaller to store the build artifacts and distribution files.
-
-##### Usage:
-
-To build the project with the default paths:
-
-```bash
-make clean-pyinstaller
-``` -->

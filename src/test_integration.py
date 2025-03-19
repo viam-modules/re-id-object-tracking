@@ -7,6 +7,7 @@ from viam.services.vision import Vision
 
 from src.re_id_tracker import ReIDObjetcTracker
 from tests.fake_camera import FakeCamera
+from tests.utils import get_config
 
 CAMERA_NAME = "fake-camera"
 
@@ -28,14 +29,6 @@ WORKING_CONFIG_DICT = {
 
 
 IMG_PATH = "./tests/alex"
-
-
-def get_config(config_dict: Dict) -> ServiceConfig:
-    """returns a config from a dict"""
-    struct = Struct()
-    struct.update(dictionary=config_dict)
-    config = ServiceConfig(attributes=struct)
-    return config
 
 
 def get_vision_service(config_dict: Dict, reconfigure=True):

@@ -5,6 +5,9 @@ import torch
 import torchvision
 from torchvision.models.detection import (
     FasterRCNN_MobileNet_V3_Large_320_FPN_Weights,
+    FasterRCNN_MobileNet_V3_Large_FPN_Weights,
+    fasterrcnn_mobilenet_v3_large_320_fpn,
+    fasterrcnn_mobilenet_v3_large_fpn,
 )
 
 from src.config.config import DetectorConfig
@@ -21,12 +24,27 @@ ssl._create_default_https_context = ssl._create_unverified_context
 class TorchvisionDetector(Detector):
     def __init__(self, cfg: DetectorConfig):
         super().__init__(cfg)
-        weights = FasterRCNN_MobileNet_V3_Large_320_FPN_Weights.COCO_V1
-        self.categories = weights.meta["categories"]
+        if cfg.model_name.value == "fasterrcnn_mobilenet_v3_large_320_fpn":
+            weights = FasterRCNN_MobileNet_V3_Large_320_FPN_Weights.COCO_V1
+            self.model = fasterrcnn_mobilenet_v3_large_320_fpn(
+                weights=weights,
+                box_score_thresh=cfg.threshold.value,
+                num_classes=91,
+            )
+        elif cfg.model_name.value == "fasterrcnn_mobilenet_v3_large_fpn":
+            weights = FasterRCNN_MobileNet_V3_Large_FPN_Weights.COCO_V1
+            self.model = fasterrcnn_mobilenet_v3_large_fpn(
+                weights=weights,
+                box_score_thresh=cfg.threshold.value,
+                num_classes=91,
+            )
 
-        self.model = torchvision.models.detection.fasterrcnn_mobilenet_v3_large_320_fpn(
-            weights=weights, box_score_thresh=cfg.threshold.value, num_classes=91
-        )
+        else:
+            raise ValueError(
+                "Supported torchvision detector are 'fasterrcnn_mobilenet_v3_large_320_fpn' or  'fasterrcnn_mobilenet_v3_large_fpn'"
+            )
+
+        self.categories = weights.meta["categories"]
         self.threshold = cfg.threshold.value  # TODO: do it in the detector super class
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model.to(self.device)
@@ -34,9 +52,6 @@ class TorchvisionDetector(Detector):
         self.transform = weights.transforms()
 
     def detect(self, image: ImageObject, visualize: bool = False) -> List[Detection]:
-        # image_tensor = (
-        #     torch.from_numpy(image).permute(2, 0, 1).contiguous()
-        # )
         preprocessed_image = self.transform(image.uint8_tensor)
         batch = [preprocessed_image]
 
@@ -71,7 +86,7 @@ class TorchvisionDetector(Detector):
             ):  # Filter only detections with label 1
                 bbox = list(
                     map(int, boxes[i].tolist())
-                )  # [x1, y1, x2, y2] format as list of integerså
+                )  # [x1, y1, x2, y2] format as list of integers
                 score = score  # Confidence score as a float
                 category = self.categories[label_idx]  # Get the category (class name)
 

@@ -28,7 +28,10 @@ def get_detector(cfg: DetectorConfig) -> Detector:
     Factory function to return the correct detector based on the configuration.
     """
     # Delay the import of TorchvisionDetector to avoid circular imports
-    if cfg.model_name.value == "fasterrcnn_mobilenet_v3_large_320_fpn":
+    if (
+        cfg.model_name.value == "fasterrcnn_mobilenet_v3_large_320_fpn"
+        or cfg.model_name.value == "fasterrcnn_mobilenet_v3_large_fpn"
+    ):
         from src.tracker.detector.torchvision_detector import TorchvisionDetector
 
         return TorchvisionDetector(cfg)

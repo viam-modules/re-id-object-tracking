@@ -29,7 +29,6 @@ from src.tracker.face_id.face_net.facenet_extractor import FaceFeaturesExtractor
 from src.tracker.track import Track
 from src.tracker.utils import save_tensor
 
-
 LOGGER = getLogger(__name__)
 
 
@@ -135,8 +134,10 @@ class FaceIdentifier:
             label_path = os.path.join(path_to_known_faces, directory)
             embeddings = []
             for file in os.listdir(label_path):
-                if not any(file.lower().endswith(suffix)
-                           for suffix in (".jpg", ".jpeg", ".png")):
+                if not any(
+                    file.lower().endswith(suffix)
+                    for suffix in (".jpg", ".jpeg", ".png")
+                ):
                     LOGGER.warning(
                         "Ignoring unsupported file type: %s. Only .jpg, .jpeg, and .png files are supported.",  # pylint: disable=line-too-long
                         file,
@@ -147,9 +148,7 @@ class FaceIdentifier:
                     "RGB"
                 )  # convert in RGB because png are RGBA
                 img_array = np.array(im)
-                uint8_tensor = (
-                    torch.from_numpy(img_array).permute(2, 0, 1).contiguous()
-                )
+                uint8_tensor = torch.from_numpy(img_array).permute(2, 0, 1).contiguous()
                 float32_tensor = uint8_tensor.to(dtype=torch.float32)
 
                 float32_tensor = float32_tensor.to(self.device)
@@ -166,9 +165,10 @@ class FaceIdentifier:
                 LOGGER.debug(f"Added embedding for {directory}/{file}")
 
             if not embeddings:
-                raise NoFacesDetectedError(
+                LOGGER.warn(
                     f"Unable to recognize any face in pictures from "
                     f"{directory}. Are you sure it contains a picture of a "
                     f"person's face?"
                 )
-            self.known_embeddings[directory] = embeddings
+            else:
+                self.known_embeddings[directory] = embeddings

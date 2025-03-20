@@ -205,7 +205,7 @@ class TracksManagerConfig:
         )
 
 
-class ReIDObjetcTrackerConfig:
+class ReIDObjectTrackerConfig:
     def __init__(self, config: ServiceConfig):
         self.config = config
 

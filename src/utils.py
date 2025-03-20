@@ -40,14 +40,11 @@ def decode_image(image: Union[Image.Image, ViamImage]) -> np.ndarray:
 
             raise ValueError(f"Unsupported image type: {image.mime_type}.")
 
-        im = Image.open(BytesIO(image.data), formats=LIBRARY_SUPPORTED_FORMATS).convert(
-            "RGB"
-        )  # convert in RGB png openened in RGBA
-        return np.array(im)
+        image = Image.open(BytesIO(image.data), formats=LIBRARY_SUPPORTED_FORMATS)
 
+    # No matter what it was originally, `image` now has type Image.Image.
     res = image.convert("RGB")
-    rgb = np.array(res)
-    return rgb
+    return np.array(res)
 
 
 def resource_path(relative_path):
@@ -62,12 +59,11 @@ def resource_path(relative_path):
     """
     try:
         # PyInstaller creates a temp folder and stores path in _MEIPASS
-        base_path = os.path.join(sys._MEIPASS, "src", "models")  # pylint: disable=duplicate-code,protected-access,no-member
-
+        base_path = sys._MEIPASS  # pylint: disable=protected-access,no-member
     except Exception:  # pylint: disable=broad-exception-caught
-        base_path = os.path.abspath(os.path.join("src", "models"))
+        base_path = os.path.abspath(".")
 
-    return os.path.join(base_path, relative_path)
+    return os.path.join(base_path, "src", "models", relative_path)
 
 
 def log_tracks_info(updated_tracks_ids, new_tracks_ids, lost_tracks_ids):
@@ -78,31 +74,22 @@ def log_tracks_info(updated_tracks_ids, new_tracks_ids, lost_tracks_ids):
         ["Lost Tracks", ", ".join(lost_tracks_ids)],
     ]
 
-    # Formatting the table using tabulate
     table_message = tabulate(
         table_data, headers=["Category", "Track IDs"], tablefmt="grid"
     )
-
-    # Log the table
     LOGGER.info("\n\n" + table_message + "\n\n")
 
 
 def log_cost_matrix(cost_matrix, track_ids, iteration_number):
-    # track_ids = list(self.tracks.keys())
-
-    # Create the detection headers
     detection_headers = [f"detection_{i+1}" for i in range(cost_matrix.shape[1])]
 
-    # Creating the table data
-    table_data = []
-    for track_id, row in zip(track_ids, cost_matrix):
-        table_data.append([track_id] + list(row))
+    table_data = [[track_id] + list(row)
+                  for track_id, row in zip(track_ids, cost_matrix)]
 
-    # Formatting the table using tabulate
     table_message = tabulate(
         table_data, headers=["Track ID"] + detection_headers, tablefmt="grid"
     )
-    # Configure the logging to write to a file
+
     logger = logging.getLogger("TrackDetectionLogger")
     logger.info(f"Iteration number: {iteration_number}")
     logger.info(table_message + "\n\n")

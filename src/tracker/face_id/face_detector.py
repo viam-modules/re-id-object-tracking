@@ -94,7 +94,8 @@ class FaceDetector:
 
     def extract_face(self, input: torch.Tensor) -> Optional[torch.Tensor]:
         """
-        Returns the box images in the coordinate of the input
+        Returns the box image in the coordinate of the input.
+        Returns None if the number of faces found is not exactly 1.
         """
 
         input_height, input_width = input.shape[1:]
@@ -141,6 +142,7 @@ class FaceDetector:
 
         if len(boxes) != 1:
             return None
+
         x1_f, x2_f = boxes[0][0], boxes[0][2]
         y1_f, y2_f = boxes[0][1], boxes[0][3]
         original_x1, original_y1 = padded_to_original_coordinates(

@@ -16,6 +16,8 @@ WORKING_CONFIG_DICT = {
     "_start_background_loop": False,
     "detection_threshold": 0.1,
     "detector_model_name": "fasterrcnn_mobilenet_v3_large_fpn",
+    "_enable_debug_tools": True,
+    "_max_size_debug_directory": 7,
 }
 
 

@@ -122,6 +122,20 @@ class DetectorConfig:
             min_value=1,
         )
 
+        self._enable_save_image_on_detection = BoolAttribute(
+            field_name="_enable_debug_tools", config=config, default_value=False
+        )
+
+        self._path_to_debug_directory = StringAttribute(
+            field_name="_path_to_debug_directory",
+            config=config,
+            default_value="~/re-id-debug",
+        )
+
+        self._max_size_debug_directory = IntAttribute(
+            field_name="_max_size_debug_directory", config=config, default_value=200
+        )
+
 
 class FaceIdConfig:
     def __init__(self, config: ServiceConfig):

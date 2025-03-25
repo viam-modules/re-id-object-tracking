@@ -1,8 +1,9 @@
+import datetime
+import os
 import ssl
 from typing import Dict, List
 
 import torch
-import torchvision
 from torchvision.models.detection import (
     FasterRCNN_MobileNet_V3_Large_320_FPN_Weights,
     FasterRCNN_MobileNet_V3_Large_FPN_Weights,
@@ -14,6 +15,7 @@ from src.config.config import DetectorConfig
 from src.image.image import ImageObject
 from src.tracker.detector.detection import Detection
 from src.tracker.detector.detector import Detector
+from src.tracker.utils import save_tensor
 
 # # This is to download resnet weights at runtime.
 # Bypasses SSL certificate verification to avoid SSL errors such as:
@@ -51,6 +53,16 @@ class TorchvisionDetector(Detector):
         self.model.eval()
         self.transform = weights.transforms()
 
+        # Debug configuration
+        self._enable_save_image_on_detection = cfg._enable_save_image_on_detection.value
+        if self._enable_save_image_on_detection:
+            self._path_to_debug_directory = os.path.expanduser(
+                cfg._path_to_debug_directory.value
+            )
+            self._max_size_debug_directory = cfg._max_size_debug_directory.value
+            if not os.path.exists(self._path_to_debug_directory):
+                os.makedirs(self._path_to_debug_directory)
+
     def detect(self, image: ImageObject, visualize: bool = False) -> List[Detection]:
         preprocessed_image = self.transform(image.uint8_tensor)
         batch = [preprocessed_image]
@@ -64,12 +76,6 @@ class TorchvisionDetector(Detector):
         """
         Post-process the output of a torchvision detection model to create a list of Detection objects,
         filtering only detections where the label is 1.
-
-        :param input: The output from a torchvision detection model, which is a dictionary containing:
-                    - 'boxes': Tensor of shape [N, 4], bounding boxes in [x1, y1, x2, y2] format.
-                    - 'scores': Tensor of shape [N], confidence scores for each detection.
-                    - 'labels': Tensor of shape [N], class indices for each detection.
-        :return: A list of Detection objects where the label is 1.
         """
         detections = []
 
@@ -79,18 +85,35 @@ class TorchvisionDetector(Detector):
 
         # Iterate over the detections in the current image
         for i in range(len(boxes)):
-            label_idx = labels[i].item()  # Class index as an int
+            label_idx = labels[i].item()
             score = scores[i].item()
-            if (
-                label_idx == 1 and score > self.threshold
-            ):  # Filter only detections with label 1
-                bbox = list(
-                    map(int, boxes[i].tolist())
-                )  # [x1, y1, x2, y2] format as list of integers
-                score = score  # Confidence score as a float
-                category = self.categories[label_idx]  # Get the category (class name)
-
-                # Append the Detection object
+            if label_idx == 1 and score > self.threshold:
+                bbox = list(map(int, boxes[i].tolist()))
+                category = self.categories[label_idx]
                 detections.append(Detection(bbox, score, category))
+
+        # Save image if persons were detected and saving is enabled
+        if self._enable_save_image_on_detection and detections:
+            # Check if debug directory has space
+            debug_files = [
+                f
+                for f in os.listdir(self._path_to_debug_directory)
+                if f.endswith(".png")
+            ]
+            if len(debug_files) < self._max_size_debug_directory:
+                # Sort detections by x1 coordinate
+                detections.sort(key=lambda x: x.bbox[0])
+
+                # Create filename with timestamp and sorted bounding boxes with scores
+                timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+                boxes_str = "-".join(
+                    f"{x1}_{y1}_{x2}_{y2}_{d.score:.2f}"
+                    for d in detections
+                    for x1, y1, x2, y2 in [d.bbox]
+                )
+                filename = f"{timestamp}_boxes_{boxes_str}.png"
+                filepath = os.path.join(self._path_to_debug_directory, filename)
+
+                save_tensor(input, filepath)
 
         return detections

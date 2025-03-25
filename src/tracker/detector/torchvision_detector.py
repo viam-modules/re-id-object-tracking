@@ -68,30 +68,9 @@ class TorchvisionDetector(Detector):
         batch = [preprocessed_image]
 
         with torch.no_grad():
-            detections = self.model(batch)[0]
+            output = self.model(batch)[0]
 
-        return self.post_process(detections)
-
-    def post_process(self, input: Dict[str, torch.Tensor]) -> List[Detection]:
-        """
-        Post-process the output of a torchvision detection model to create a list of Detection objects,
-        filtering only detections where the label is 1.
-        """
-        detections = []
-
-        boxes = input["boxes"]  # Tensor of shape [N, 4]
-        scores = input["scores"]  # Tensor of shape [N]
-        labels = input["labels"]  # Tensor of shape [N]
-
-        # Iterate over the detections in the current image
-        for i in range(len(boxes)):
-            label_idx = labels[i].item()
-            score = scores[i].item()
-            if label_idx == 1 and score > self.threshold:
-                bbox = list(map(int, boxes[i].tolist()))
-                category = self.categories[label_idx]
-                detections.append(Detection(bbox, score, category))
-
+        detections = self.post_process(output)
         # Save image if persons were detected and saving is enabled
         if self._enable_save_image_on_detection and detections:
             # Check if debug directory has space
@@ -114,6 +93,28 @@ class TorchvisionDetector(Detector):
                 filename = f"{timestamp}_boxes_{boxes_str}.png"
                 filepath = os.path.join(self._path_to_debug_directory, filename)
 
-                save_tensor(input, filepath)
+                save_tensor(image.float32_tensor, filepath)
+
+        return detections
+
+    def post_process(self, input: Dict[str, torch.Tensor]) -> List[Detection]:
+        """
+        Post-process the output of a torchvision detection model to create a list of Detection objects,
+        filtering only detections where the label is 1.
+        """
+        detections = []
+
+        boxes = input["boxes"]  # Tensor of shape [N, 4]
+        scores = input["scores"]  # Tensor of shape [N]
+        labels = input["labels"]  # Tensor of shape [N]
+
+        # Iterate over the detections in the current image
+        for i in range(len(boxes)):
+            label_idx = labels[i].item()
+            score = scores[i].item()
+            if label_idx == 1 and score > self.threshold:
+                bbox = list(map(int, boxes[i].tolist()))
+                category = self.categories[label_idx]
+                detections.append(Detection(bbox, score, category))
 
         return detections

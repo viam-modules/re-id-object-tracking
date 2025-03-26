@@ -23,7 +23,6 @@ from src.tracker.track import Track
 from src.tracker.tracks_manager import TracksManager
 from src.utils import log_cost_matrix, log_tracks_info
 
-
 LOGGER = getLogger(__name__)
 
 
@@ -86,6 +85,8 @@ class Tracker:
 
         self.start_background_loop = cfg.tracker_config._start_background_loop
 
+        self.last_image: ImageObject = None
+
         self.compute_known_persons_embeddings()
 
     def start(self):
@@ -139,8 +140,12 @@ class Tracker:
         """
         while not self.stop_event.is_set():
             img = await self.get_and_decode_img()
-            # TODO: check img here
             if img is not None:
+                if self.last_image is not None:
+                    # Check if the current image is identical to the last one to avoid processing duplicates
+                    if torch.equal(img.uint8_tensor, self.last_image.uint8_tensor):
+                        continue
+                    self.last_image = img
                 self.update(img)  # Update tracks
             await sleep(self.sleep_period)
 
@@ -551,8 +556,10 @@ class Tracker:
             label_path = os.path.join(self.path_to_known_persons, directory)
             embeddings = []
             for file in os.listdir(label_path):
-                if not any(file.lower().endswith(suffix)
-                           for suffix in (".jpg", ".jpeg", ".png")):
+                if not any(
+                    file.lower().endswith(suffix)
+                    for suffix in (".jpg", ".jpeg", ".png")
+                ):
                     LOGGER.warning(
                         "Ignoring unsupported file type: %s. Only .jpg, .jpeg, and .png files are supported.",  # pylint: disable=line-too-long
                         file,
@@ -565,8 +572,7 @@ class Tracker:
                 detections = self.detector.detect(img_obj)
 
                 if not detections:
-                    LOGGER.warning(
-                        f"Unable to find person in {directory}/{file}")
+                    LOGGER.warning(f"Unable to find person in {directory}/{file}")
                     continue
 
                 # Compute feature vectors for the current detections

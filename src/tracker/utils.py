@@ -1,24 +1,15 @@
 import torch
 import torch.nn.functional as F
 from PIL import Image
+from torchvision.io import write_png
 
 
 def save_tensor(tensor: torch.Tensor, path):
-    if tensor.is_cuda:
-        tensor = tensor.cpu().detach()
     if tensor.dim() == 4:
         tensor = tensor[0]
     if tensor.dtype != torch.uint8:
         tensor = tensor.to(dtype=torch.uint8).contiguous()
-
-    # for PIL
-    hwc_tensor = tensor.permute(1, 2, 0)
-    # Convert to NumPy array
-    array = hwc_tensor.numpy()
-
-    # Create a PIL Image
-    image = Image.fromarray(array)
-    image.save(path)
+    write_png(tensor, path, 0)
 
 
 def resize_for_padding(input_tensor, target_size):

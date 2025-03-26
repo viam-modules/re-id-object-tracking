@@ -21,7 +21,7 @@ class TrackerConfig:
             field_name="min_track_persistence",
             config=config,
             min_value=0,
-            default_value=10,
+            default_value=4,
         )
         self.lambda_value = FloatAttribute(
             field_name="lambda_value",
@@ -120,6 +120,20 @@ class DetectorConfig:
             config=config,
             default_value=5,
             min_value=1,
+        )
+
+        self._enable_save_image_on_detection = BoolAttribute(
+            field_name="_enable_debug_tools", config=config, default_value=False
+        )
+
+        self._path_to_debug_directory = StringAttribute(
+            field_name="_path_to_debug_directory",
+            config=config,
+            default_value="~/re-id-debug",
+        )
+
+        self._max_size_debug_directory = IntAttribute(
+            field_name="_max_size_debug_directory", config=config, default_value=200
         )
 
 

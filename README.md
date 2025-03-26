@@ -109,7 +109,7 @@ Recomputes embeddings.
 | `cooldown_period_s`       | float  | Optional  | `5`           | Duration for which the trigger is on.`new_object_detected`.                                          |
 | `re_id_threshold`         | float  | Optional  | `0.3`         | Threshold for determining whether two persons match based on body features similarity.    |
 | `min_track_persistence`   | int    | Optional  | `10`          | Minimum number of frames a track candidate must persist before beinfg promoted to a track.                         |
-| `max_frequency_hz`           | float  | Optional  | `10`          | Frequency at which the tracking steps are performed. |
+| `max_frequency_hz`           | float  | Optional  | `4`          | Frequency at which the tracking steps are performed. |
 | `save_to_db`              | bool   | Optional  | `True`        | Indicates whether tracks should be saved to the database.                       |
 | `save_period`      | int    | Optional     | `20`    | Interval (in number of tracking steps) when tracks are saved to the database.               |
 | `start_fresh`             | bool   | Optional  | `False`       | Whether or not to load the tracks from the database at `reconfigure()`.                             |

@@ -54,7 +54,7 @@ class TrackerConfig:
         self.max_frequency = FloatAttribute(
             field_name="max_frequency_hz",
             config=config,
-            default_value=10,
+            default_value=4,
             min_value=0.1,
             max_value=100,
         )

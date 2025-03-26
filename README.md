@@ -108,7 +108,7 @@ Recomputes embeddings.
 | `feature_distance_metric` | string | Optional  | `'cosine'` | Metric used for calculating feature distance. Options include `cosine` and `euclidean`. Refer to [torch-re-id model zoo](https://kaiyangzhou.github.io/deep-person-reid/MODEL_ZOO.html) to select the metric that matches your model.|
 | `cooldown_period_s`       | float  | Optional  | `5`           | Duration for which the trigger is on.`new_object_detected`.                                          |
 | `re_id_threshold`         | float  | Optional  | `0.3`         | Threshold for determining whether two persons match based on body features similarity.    |
-| `min_track_persistence`   | int    | Optional  | `4`          | Minimum number of frames a track candidate must persist before beinfg promoted to a track.                         |
+| `min_track_persistence`   | int    | Optional  | `10`          | Minimum number of frames a track candidate must persist before beinfg promoted to a track.                         |
 | `max_frequency_hz`           | float  | Optional  | `10`          | Frequency at which the tracking steps are performed. |
 | `save_to_db`              | bool   | Optional  | `True`        | Indicates whether tracks should be saved to the database.                       |
 | `save_period`      | int    | Optional     | `20`    | Interval (in number of tracking steps) when tracks are saved to the database.               |
@@ -121,7 +121,7 @@ Recomputes embeddings.
 | Name                              | Type   | Inclusion    | Default                                 | Description                                                                                                     |
 | --------------------------------- | ------ | ------------ | --------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
 | `detector_model_name`             | string | Optional| `'fasterrcnn_mobilenet_v3_large_fpn'` | Name of the model used for detection. Only option at the moment. Options include `'fasterrcnn_mobilenet_v3_large_320_fpn'` (low resolution)  and `'fasterrcnn_mobilenet_v3_large_fpn'` (high resolution)  |
-| `detection_threshold`             | float  | Optional     | `0.9`                                   | Confidence threshold for detecting objects, with values ranging from 0.0 to 1.0.                                |
+| `detection_threshold`             | float  | Optional     | `0.95`                                   | Confidence threshold for detecting objects, with values ranging from 0.0 to 1.0.                                |
 | `detector_device`                 | string | Optional     | `'cpu'`                                 | Device on which the detection model will run. Options are `cpu` and `gpu`.                                      |
 | `_enable_save_image_on_detection` | bool | Optional | `False` | When enabled, saves images containing person detections to a debug directory. |
 | `_path_to_debug_directory` | string | Optional | `"~/re-id-debug"` | Directory path where debug images will be saved. Required if `_enable_save_image_on_detection` is True. |

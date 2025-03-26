@@ -21,7 +21,7 @@ class TrackerConfig:
             field_name="min_track_persistence",
             config=config,
             min_value=0,
-            default_value=4,
+            default_value=10,
         )
         self.lambda_value = FloatAttribute(
             field_name="lambda_value",
@@ -105,7 +105,7 @@ class DetectorConfig:
             config=config,
             min_value=0.0,
             max_value=1.0,
-            default_value=0.9,
+            default_value=0.95,
         )
         self.device = StringAttribute(
             field_name="detector_device",

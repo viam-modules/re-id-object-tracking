@@ -21,7 +21,7 @@ class TrackerConfig:
             field_name="min_track_persistence",
             config=config,
             min_value=0,
-            default_value=10,
+            default_value=4,
         )
         self.lambda_value = FloatAttribute(
             field_name="lambda_value",
@@ -54,7 +54,7 @@ class TrackerConfig:
         self.max_frequency = FloatAttribute(
             field_name="max_frequency_hz",
             config=config,
-            default_value=4,
+            default_value=10,
             min_value=0.1,
             max_value=100,
         )

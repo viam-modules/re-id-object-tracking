@@ -121,7 +121,7 @@ Recomputes embeddings.
 | Name                              | Type   | Inclusion    | Default                                 | Description                                                                                                     |
 | --------------------------------- | ------ | ------------ | --------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
 | `detector_model_name`             | string | Optional| `'fasterrcnn_mobilenet_v3_large_fpn'` | Name of the model used for detection. Only option at the moment. Options include `'fasterrcnn_mobilenet_v3_large_320_fpn'` (low resolution)  and `'fasterrcnn_mobilenet_v3_large_fpn'` (high resolution)  |
-| `detection_threshold`             | float  | Optional     | `0.9`                                   | Confidence threshold for detecting objects, with values ranging from 0.0 to 1.0.                                |
+| `detection_threshold`             | float  | Optional     | `0.95`                                   | Confidence threshold for detecting objects, with values ranging from 0.0 to 1.0.                                |
 | `detector_device`                 | string | Optional     | `'cpu'`                                 | Device on which the detection model will run. Options are `cpu` and `gpu`.                                      |
 | `_enable_save_image_on_detection` | bool | Optional | `False` | When enabled, saves images containing person detections to a debug directory. |
 | `_path_to_debug_directory` | string | Optional | `"~/re-id-debug"` | Directory path where debug images will be saved. Required if `_enable_save_image_on_detection` is True. |

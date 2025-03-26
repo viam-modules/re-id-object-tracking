@@ -203,7 +203,7 @@ class Tracker:
         # Keep track of the old tracks, updated and unmatched tracks
         all_old_tracks_id = set(self.tracks.keys())
         updated_tracks_ids = set()
-        unmatched_detections = set(range(len(detections)))
+        unmatched_detections_idx = set(range(len(detections)))
         new_tracks_ids = set()
         current_track_candidates = []
 
@@ -241,12 +241,12 @@ class Tracker:
                 )
                 track.set_is_detected()
                 updated_tracks_ids.add(track_id)
-                unmatched_detections.discard(col)
+                unmatched_detections_idx.discard(col)
 
         # Find match with track candidate
-        if len(unmatched_detections) > 0:
+        if len(unmatched_detections_idx) > 0:
             if len(self.track_candidates) < 1:
-                for detection_id in unmatched_detections:
+                for detection_id in unmatched_detections_idx:
                     detection = detections[detection_id]
                     feature_vector = features_vectors[detection_id]
 
@@ -256,9 +256,10 @@ class Tracker:
                     )
                     current_track_candidates.append(len(self.track_candidates) - 1)
             else:
+                unmatched_detections = [detections[i] for i in unmatched_detections_idx]
                 track_candidate_idx, unmatched_detection_idx, cost_matrix = (
                     self.get_matching_track_candidates(
-                        detections=[detections[i] for i in unmatched_detections],
+                        detections=unmatched_detections,
                         features_vectors=features_vectors,
                     )
                 )
@@ -267,7 +268,7 @@ class Tracker:
                     track_candidate_idx, unmatched_detection_idx
                 ):
                     distance = cost_matrix[track_candidate_id, unmatched_detection_id]
-                    detection = detections[unmatched_detection_id]
+                    detection = unmatched_detections[unmatched_detection_id]
                     matching_track_candidate = self.track_candidates[track_candidate_id]
 
                     if distance < self.distance_threshold:

@@ -105,7 +105,7 @@ class DetectorConfig:
             config=config,
             min_value=0.0,
             max_value=1.0,
-            default_value=0.9,
+            default_value=0.95,
         )
         self.device = StringAttribute(
             field_name="detector_device",

@@ -94,7 +94,7 @@ class DetectorConfig:
         self.model_name = StringAttribute(
             field_name="detector_model_name",
             config=config,
-            default_value="fasterrcnn_mobilenet_v3_large_fpn",
+            default_value="fasterrcnn_mobilenet_v3_large_320_fpn",
             allowlist=[
                 "fasterrcnn_mobilenet_v3_large_320_fpn",  # low resolution model (best effort to resize smallest edge to 320)
                 "fasterrcnn_mobilenet_v3_large_fpn",  #  higher resolution model (best effort to resize smallest edge to 800)

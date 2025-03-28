@@ -87,7 +87,7 @@ class FaceDetector:
         x1, y1 = max(0, x1), max(0, y1)  # Clip to image dimensions
         x2, y2 = min(image_width, x2), min(image_height, y2)
 
-        cropped_image = image_object.float32_tensor[:, y1:y2, x1:x2]
+        cropped_image = image_object.float32_tensor[:, x1:x2, y1:y2]
         if self.debug:
             save_tensor(cropped_image, "should_be_a_person.png")
         return self.extract_face(cropped_image)

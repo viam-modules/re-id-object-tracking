@@ -18,6 +18,9 @@ from src.tracker.utils import (
 from src.utils import resource_path
 
 ULTRA_FACE_REPO = "ultraface"
+from viam.logging import getLogger
+
+LOGGER = getLogger(__name__)
 
 
 class FaceDetectorModelConfig:
@@ -86,8 +89,12 @@ class FaceDetector:
         x1, y1, x2, y2 = map(int, track.bbox)  # Ensure integer coordinates
         x1, y1 = max(0, x1), max(0, y1)  # Clip to image dimensions
         x2, y2 = min(image_width, x2), min(image_height, y2)
-
         cropped_image = image_object.float32_tensor[:, y1:y2, x1:x2]
+        if cropped_image.numel() == 0:
+            LOGGER.error(
+                f"Invalid crop region: bounding box should be in [x1, y1, x2, y2] format, with 0 <= x1 < x2 <= W and 0 <= y1 < y2 <= H. Got x1={x1}, y1={y1}, x2={x2}, y2={y2}, which resulted in an empty tensor."
+            )
+            return None
         if self.debug:
             save_tensor(cropped_image, "should_be_a_person.png")
         return self.extract_face(cropped_image)

@@ -80,9 +80,6 @@ class TorchvisionDetector(Detector):
                 if f.endswith(".png")
             ]
             if len(debug_files) < self._max_size_debug_directory:
-                # Sort detections by x1 coordinate
-                detections.sort(key=lambda x: x.bbox[0])
-
                 # Create filename with timestamp and sorted bounding boxes with scores
                 timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S_%f")
                 boxes_str = "-".join(

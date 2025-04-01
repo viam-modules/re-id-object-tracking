@@ -5,6 +5,8 @@ from torchvision.io import write_png
 
 
 def save_tensor(tensor: torch.Tensor, path):
+    if tensor.is_cuda:
+        tensor = tensor.cpu()
     if tensor.dim() == 4:
         tensor = tensor[0]
     if tensor.dtype != torch.uint8:

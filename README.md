@@ -124,7 +124,7 @@ Recomputes embeddings.
 | `detection_threshold`             | float  | Optional     | `0.95`                                   | Confidence threshold for detecting objects, with values ranging from 0.0 to 1.0.                                |
 | `detector_device`                 | string | Optional     | `'cpu'`                                 | Device on which the detection model will run. Options are `cpu` and `gpu`.                                      |
 | `_enable_debug_tools` | bool | Optional | `False` | When enabled, saves images containing person detections to a debug directory. |
-| `_path_to_debug_directory` | string | Optional | `"~/re-id-debug"` | Directory path where debug images will be saved. Required if `_enable_debug_tools` is True. |
+| `_path_to_debug_directory` | string | Optional | `None` | Directory path where debug images will be saved. Required if `_enable_debug_tools` is True. |
 | `_max_size_debug_directory` | int | Optional | `200` | Maximum number of debug images to store in the debug directory. |
 
 

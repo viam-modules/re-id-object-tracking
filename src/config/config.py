@@ -122,14 +122,14 @@ class DetectorConfig:
             min_value=1,
         )
 
-        self._enable_save_image_on_detection = BoolAttribute(
+        self._enable_debug_tools = BoolAttribute(
             field_name="_enable_debug_tools", config=config, default_value=False
         )
 
         self._path_to_debug_directory = StringAttribute(
             field_name="_path_to_debug_directory",
             config=config,
-            default_value="~/re-id-debug",
+            default_value=None,
         )
 
         self._max_size_debug_directory = IntAttribute(

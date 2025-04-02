@@ -54,14 +54,16 @@ class TorchvisionDetector(Detector):
         self.transform = weights.transforms()
 
         # Debug configuration
-        self._enable_save_image_on_detection = cfg._enable_save_image_on_detection.value
-        if self._enable_save_image_on_detection:
-            self._path_to_debug_directory = os.path.expanduser(
-                cfg._path_to_debug_directory.value
-            )
-            self._max_size_debug_directory = cfg._max_size_debug_directory.value
+        self._enable_debug_tools = cfg._enable_debug_tools.value
+        if self._enable_debug_tools:
+            if cfg._path_to_debug_directory.value is None:
+                raise ValueError(
+                    "path_to_debug_directory is not set but _enable_debug_tools is set to true. Please set it to a valid path."
+                )
+            self._path_to_debug_directory = cfg._path_to_debug_directory.value
             if not os.path.exists(self._path_to_debug_directory):
                 os.makedirs(self._path_to_debug_directory)
+            self._max_size_debug_directory = cfg._max_size_debug_directory.value
 
     def detect(self, image: ImageObject, visualize: bool = False) -> List[Detection]:
         preprocessed_image = self.transform(image.uint8_tensor)
@@ -72,7 +74,7 @@ class TorchvisionDetector(Detector):
 
         detections = self.post_process(output)
         # Save image if persons were detected and saving is enabled
-        if self._enable_save_image_on_detection and detections:
+        if self._enable_debug_tools and detections:
             # Check if debug directory has space
             debug_files = [
                 f

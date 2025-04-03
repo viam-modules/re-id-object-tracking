@@ -152,7 +152,8 @@ class Tracker:
     async def get_and_decode_img(self):
         try:
             viam_img = await self.camera.get_image(mime_type=CameraMimeType.JPEG)
-        except:
+        except Exception as e:
+            LOGGER.error(f"Error getting image: {e}")
             return None
         return ImageObject(viam_img, self.device)
 

@@ -149,7 +149,13 @@ class Tracker:
                     if torch.equal(img.uint8_tensor, self.last_image.uint8_tensor):
                         continue
                     self.last_image = img
-                self.update(img)  # Update tracks
+                try:
+                    self.update(img)  # Update tracks
+                except Exception as e:
+                    LOGGER.error(f"Error updating tracker: {e}")
+                    await sleep(
+                        self.sleep_period * 5
+                    )  # sleep a bit more if something bad happened
             await sleep(self.sleep_period)
 
     async def get_and_decode_img(self):

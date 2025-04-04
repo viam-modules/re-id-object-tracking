@@ -5,7 +5,7 @@ from viam.module.module import Module
 from viam.resource.registry import Registry, ResourceCreatorRegistration
 from viam.services.vision import Vision
 
-from src.re_id_tracker import ReIDObjetcTracker
+from src.re_id_tracker import ReIDObjectTracker
 
 
 async def main():
@@ -16,15 +16,15 @@ async def main():
     """
     Registry.register_resource_creator(
         Vision.SUBTYPE,
-        ReIDObjetcTracker.MODEL,
+        ReIDObjectTracker.MODEL,
         ResourceCreatorRegistration(
-            ReIDObjetcTracker.new_service,
-            ReIDObjetcTracker.validate_config,
+            ReIDObjectTracker.new_service,
+            ReIDObjectTracker.validate_config,
         ),
     )
     module = Module.from_args()
 
-    module.add_model_from_registry(Vision.SUBTYPE, ReIDObjetcTracker.MODEL)
+    module.add_model_from_registry(Vision.SUBTYPE, ReIDObjectTracker.MODEL)
     await module.start()
 
 

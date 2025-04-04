@@ -226,7 +226,6 @@ class ReIDObjetcTracker(Vision, Reconfigurable):
             await component.close()
 
         """
-        await self.tracker.stop()  # TODO: ask Naveed
+        await self.tracker.stop()
         await super().close()
-
         return

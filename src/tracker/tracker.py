@@ -120,8 +120,11 @@ class Tracker:
         self.stop_event.set()
         self.new_object_notifier.close()
         self.tracks_manager.close()
-        if self.background_task is not None:
-            await self.background_task  # Wait for the background task to finish
+        try:
+            if self.background_task is not None:
+                await self.background_task  # Wait for the background task to finish
+        except Exception as e:
+            LOGGER.error(f"Error stopping background task: {e}")
 
     def import_tracks_from_tracks_manager(self):
         self.tracks = self.tracks_manager.get_tracks_on_disk()
@@ -146,13 +149,20 @@ class Tracker:
                     if torch.equal(img.uint8_tensor, self.last_image.uint8_tensor):
                         continue
                     self.last_image = img
-                self.update(img)  # Update tracks
+                try:
+                    self.update(img)  # Update tracks
+                except Exception as e:
+                    LOGGER.error(f"Error updating tracker: {e}")
+                    await sleep(
+                        self.sleep_period * 5
+                    )  # sleep a bit more if something bad happened
             await sleep(self.sleep_period)
 
     async def get_and_decode_img(self):
         try:
             viam_img = await self.camera.get_image(mime_type=CameraMimeType.JPEG)
-        except:
+        except Exception as e:
+            LOGGER.error(f"Error getting image: {e}")
             return None
         return ImageObject(viam_img, self.device)
 

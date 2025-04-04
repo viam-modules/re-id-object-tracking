@@ -226,9 +226,6 @@ class ReIDObjetcTracker(Vision, Reconfigurable):
             await component.close()
 
         """
-        try:
-            await self.tracker.stop()
-            await super().close()
-        except Exception as e:
-            LOGGER.error(f"Error closing tracker: {e}")
+        await self.tracker.stop()
+        await super().close()
         return

@@ -120,8 +120,11 @@ class Tracker:
         self.stop_event.set()
         self.new_object_notifier.close()
         self.tracks_manager.close()
-        if self.background_task is not None:
-            await self.background_task  # Wait for the background task to finish
+        try:
+            if self.background_task is not None:
+                await self.background_task  # Wait for the background task to finish
+        except Exception as e:
+            LOGGER.error(f"Error stopping background task: {e}")
 
     def import_tracks_from_tracks_manager(self):
         self.tracks = self.tracks_manager.get_tracks_on_disk()

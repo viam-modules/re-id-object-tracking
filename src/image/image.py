@@ -10,6 +10,9 @@ from viam.media.video import ViamImage
 def get_tensor_from_np_array(np_array: np.ndarray) -> torch.Tensor:
     """
     returns an RGB tensor
+
+    If crop_region is provided, it should contain relative coordinates (0.0-1.0)
+    for x1, y1, x2, y2 that will be converted to absolute pixel positions
     """
     uint8_tensor = (
         torch.from_numpy(np_array).permute(2, 0, 1).contiguous()
@@ -23,7 +26,8 @@ class ImageObject:
         self,
         viam_image: ViamImage,
         pil_image: Optional[Image.Image] = None,
-        device=None
+        device=None,
+        crop_region: Optional[dict] = None,
     ):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         if pil_image is not None:
@@ -33,31 +37,30 @@ class ImageObject:
             self.pil_image = Image.open(io.BytesIO(viam_image.data)).convert(
                 "RGB"
             )  # -> in (H, W, C)
+
         self.np_array = np.array(self.pil_image, dtype=np.uint8)
-        uint8_tensor, float32_tensor = get_tensor_from_np_array(self.np_array)
+        uint8_tensor, float32_tensor = get_tensor_from_np_array(
+            self.np_array, crop_region
+        )
         self.uint8_tensor = uint8_tensor.to(self.device)
         self.float32_tensor = float32_tensor.to(self.device)
 
-    # def add_encoding(mime_type: CameraMimeType, bytes):
-    #     self.encodings[mime_type] = bytes
+        if crop_region is not None:
+            # Get image dimensions
+            _, height, width = uint8_tensor.shape
 
-    # def get_cropped_tensor():
-    #     pass
+            # Convert relative coordinates (0.0-1.0) to absolute pixel positions
+            x1 = int(crop_region.get("x1", 0.0) * width)
+            y1 = int(crop_region.get("y1", 0.0) * height)
+            x2 = int(crop_region.get("x2", 1.0) * width)
+            y2 = int(crop_region.get("y2", 1.0) * height)
 
-    # def get_viam_image():
-    #     pass
+            # Ensure coordinates are within image bounds
+            x1 = max(0, min(x1, width - 1))
+            y1 = max(0, min(y1, height - 1))
+            x2 = max(x1 + 1, min(x2, width))
+            y2 = max(y1 + 1, min(y2, height))
 
-    # def get_np_array(self):
-    #     if self.np_array is not None:
-
-    #     if self.encodings:
-
-    # def get_tensor(self):
-    #     if self.tensor is not None:
-    #         return self.tensor
-    #     else:
-
-    # def get_pil_image(self):
-    #     if self.pil_image is not None:
-    #         return
-    #     return Image.open(io.BytesIO(image_bytes)).convert("RGB")
+            # Apply cropping to both tensors
+            self.uint8_tensor = uint8_tensor[:, y1:y2, x1:x2]
+            self.float32_tensor = float32_tensor[:, y1:y2, x1:x2]

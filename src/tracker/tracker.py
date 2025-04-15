@@ -45,6 +45,7 @@ class Tracker:
         self.max_age_track = cfg.tracker_config.max_age_track.value
         self.distance = cfg.tracker_config.feature_distance_metric.value
         self.sleep_period = 1 / (cfg.tracker_config.max_frequency.value)
+        self.crop_region = cfg.tracker_config.crop_region.value
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -164,7 +165,7 @@ class Tracker:
         except Exception as e:
             LOGGER.error(f"Error getting image: {e}")
             return None
-        return ImageObject(viam_img, self.device)
+        return ImageObject(viam_img, self.device, self.crop_region)
 
     def relabel_tracks(self, dict_old_label_new_label: Dict[str, str]):
         answer = {}

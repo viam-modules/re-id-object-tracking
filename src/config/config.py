@@ -2,6 +2,7 @@ from viam.proto.app.robot import ServiceConfig
 
 from src.config.attribute import (
     BoolAttribute,
+    DictAttribute,
     FloatAttribute,
     IntAttribute,
     StringAttribute,
@@ -86,6 +87,13 @@ class TrackerConfig:
             field_name="path_to_known_persons",
             config=config,
             default_value=None,
+        )
+
+        self.crop_region = DictAttribute(
+            field_name="crop_region",
+            config=config,
+            default_value=None,
+            required_fields=["x1_rel", "y1_rel", "x2_rel", "y2_rel"],
         )
 
 

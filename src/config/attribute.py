@@ -166,3 +166,53 @@ class BoolAttribute(Attribute):
 
     def __bool__(self):
         return self.value
+
+
+class DictAttribute(Attribute):
+    def __init__(
+        self,
+        field_name: str,
+        config: "ServiceConfig",
+        required: bool = False,
+        required_fields: Optional[list[str]] = None,
+        default_value: Optional[dict] = None,
+    ):
+        self.required_fields = required_fields or []
+        super().__init__(field_name, config, required, default_value or {})
+
+    def validate(self, value: Any):
+        value = super().validate(value)
+        if value is None:
+            return {}
+
+        if not isinstance(value, dict):
+            if not hasattr(value, "struct_value"):
+                raise ValueError(
+                    f"Expected dictionary for '{self.field_name}', got {type(value).__name__}"
+                )
+            # Convert from protobuf struct to Python dict
+            value = {k: v.string_value for k, v in value.struct_value.fields.items()}
+
+        # Check for required fields
+        missing_fields = [field for field in self.required_fields if field not in value]
+        if missing_fields:
+            raise ValueError(
+                f"Missing required fields in '{self.field_name}': {missing_fields}"
+            )
+
+        return value
+
+    def __getitem__(self, key):
+        return self.value[key]
+
+    def get(self, key, default=None):
+        return self.value.get(key, default)
+
+    def items(self):
+        return self.value.items()
+
+    def keys(self):
+        return self.value.keys()
+
+    def values(self):
+        return self.value.values()

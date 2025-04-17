@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any, List, Optional
 
 from viam.proto.app.robot import ServiceConfig
 
@@ -7,39 +7,28 @@ class Attribute:
     def __init__(
         self,
         field_name: str,
-        config: ServiceConfig,
         required: bool = False,
         default_value: Optional[Any] = None,
     ):
         self.field_name = field_name
-        self.config = config
         self.required = required
         self.default_value = default_value
-        self.value = None
-        self.set_value()
 
-    def validate(self, value: Any):
+    def validate(self, config: "ServiceConfig", value=None):
+        if value is not None:
+            return value
+        value = config.attributes.fields.get(self.field_name, self.default_value)
         if self.required and value is None:
             raise ValueError(
                 f"Missing required configuration attribute: {self.field_name}"
             )
         return value
 
-    def set_value(self):
-        value = self.config.attributes.fields.get(self.field_name, self.default_value)
-        if self.required and value is None:
-            raise ValueError(
-                f"Missing required configuration attribute: {self.field_name}"
-            )
-        self.value = self.validate(value)
-        return self.value
-
 
 class IntAttribute(Attribute):
     def __init__(
         self,
         field_name: str,
-        config: ServiceConfig,
         required: bool = False,
         min_value: Optional[int] = None,
         max_value: Optional[int] = None,
@@ -47,10 +36,10 @@ class IntAttribute(Attribute):
     ):
         self.min_value = min_value
         self.max_value = max_value
-        super().__init__(field_name, config, required, default_value)
+        super().__init__(field_name, required, default_value)
 
-    def validate(self, value: Any):
-        value = super().validate(value)
+    def validate(self, config: "ServiceConfig", value=None):
+        value = super().validate(config, value)
         if not isinstance(value, (float, int)):
             if not hasattr(value, "number_value"):
                 raise ValueError(
@@ -76,7 +65,6 @@ class FloatAttribute(Attribute):
     def __init__(
         self,
         field_name: str,
-        config: ServiceConfig,
         required: bool = False,
         min_value: Optional[float] = None,
         max_value: Optional[float] = None,
@@ -84,10 +72,10 @@ class FloatAttribute(Attribute):
     ):
         self.min_value = min_value
         self.max_value = max_value
-        super().__init__(field_name, config, required, default_value)
+        super().__init__(field_name, required, default_value)
 
-    def validate(self, value: Any):
-        value = super().validate(value)
+    def validate(self, config: "ServiceConfig", value=None):
+        value = super().validate(config, value)
         if not isinstance(value, (float, int)):
             if not hasattr(value, "number_value"):
                 raise ValueError(
@@ -110,16 +98,15 @@ class StringAttribute(Attribute):
     def __init__(
         self,
         field_name: str,
-        config: "ServiceConfig",
         required: bool = False,
         allowlist: Optional[list] = None,
         default_value: Optional[str] = None,
     ):
         self.allowlist = allowlist
-        super().__init__(field_name, config, required, default_value)
+        super().__init__(field_name, required, default_value)
 
-    def validate(self, value: Any):
-        value = super().validate(value)
+    def validate(self, config: "ServiceConfig", value=None):
+        value = super().validate(config, value)
         if value is None:
             return value
         if not isinstance(value, str):  # if it's not the default value
@@ -146,14 +133,13 @@ class BoolAttribute(Attribute):
     def __init__(
         self,
         field_name: str,
-        config: "ServiceConfig",
         required: bool = False,
         default_value: Optional[bool] = None,
     ):
-        super().__init__(field_name, config, required, default_value)
+        super().__init__(field_name, required, default_value)
 
-    def validate(self, value: Any):
-        value = super().validate(value)
+    def validate(self, config: "ServiceConfig", value=None):
+        value = super().validate(config, value)
         if not isinstance(value, bool):  # if it's not the default value
             if not hasattr(
                 value, "bool_value"
@@ -172,47 +158,21 @@ class DictAttribute(Attribute):
     def __init__(
         self,
         field_name: str,
-        config: "ServiceConfig",
         required: bool = False,
-        required_fields: Optional[list[str]] = None,
+        fields: Optional[List["Attribute"]] = None,
         default_value: Optional[dict] = None,
     ):
-        self.required_fields = required_fields or []
-        super().__init__(field_name, config, required, default_value or {})
+        self.fields = fields or []
+        super().__init__(field_name, required, default_value)
 
-    def validate(self, value: Any):
-        value = super().validate(value)
+    def validate(self, config: "ServiceConfig", value=None):
+        value = super().validate(config)
         if value is None:
-            return {}
-
-        if not isinstance(value, dict):
-            if not hasattr(value, "struct_value"):
-                raise ValueError(
-                    f"Expected dictionary for '{self.field_name}', got {type(value).__name__}"
-                )
-            # Convert from protobuf struct to Python dict
-            value = {k: v.string_value for k, v in value.struct_value.fields.items()}
-
-        # Check for required fields
-        missing_fields = [field for field in self.required_fields if field not in value]
-        if missing_fields:
-            raise ValueError(
-                f"Missing required fields in '{self.field_name}': {missing_fields}"
+            return value
+        value = dict(value.struct_value.fields)
+        for attribute in self.fields:
+            value[attribute.field_name] = attribute.validate(
+                config, value[attribute.field_name]
             )
 
         return value
-
-    def __getitem__(self, key):
-        return self.value[key]
-
-    def get(self, key, default=None):
-        return self.value.get(key, default)
-
-    def items(self):
-        return self.value.items()
-
-    def keys(self):
-        return self.value.keys()
-
-    def values(self):
-        return self.value.values()

@@ -59,7 +59,7 @@ class FaceFeaturesExtractor:
         debug: bool = False,
     ):
         self.debug = debug
-        self.model_config = ENCODERS_CONFIG.get(cfg.feature_extractor.value)
+        self.model_config = ENCODERS_CONFIG.get(cfg.feature_extractor)
         model_path = self.model_config.get_model_path()
         self.input_shape = self.model_config.input_shape
 
@@ -125,6 +125,6 @@ class FaceFeaturesExtractor:
         elif self.model_config.metric == "manhattan":
             distance = cityblock(feature_vector_1, feature_vector_2)
         else:
-            raise ValueError(f"Unsupported metric '{self.model_config.metric }'")
+            raise ValueError(f"Unsupported metric '{self.model_config.metric}'")
 
         return (distance - self.model_config.mean) / self.model_config.std

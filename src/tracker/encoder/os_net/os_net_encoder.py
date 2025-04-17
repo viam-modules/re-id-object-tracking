@@ -79,7 +79,7 @@ class OSNetFeatureEncoder(FeatureEncoder):
         :param device: The device to run the model on ('cpu' or 'cuda').
         """
 
-        if cfg.device.value == "cuda":
+        if cfg.device == "cuda":
             if not torch.cuda.is_available():
                 LOGGER.warning(
                     "'feature_encoder_device' is set to 'cuda' but cuda is not avalaible. using cpu instead"
@@ -94,7 +94,7 @@ class OSNetFeatureEncoder(FeatureEncoder):
             use_gpu = False
             self.device = torch.device("cpu")
 
-        self.model_config = ENCODERS_CONFIG.get(cfg.feature_extractor_name.value)
+        self.model_config = ENCODERS_CONFIG.get(cfg.feature_extractor_name)
 
         model_name = "osnet_ain_x1_0"  # cfg.feature_extractor_name.value
         if model_name == "osnet_ain_x1_0":

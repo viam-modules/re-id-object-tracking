@@ -40,12 +40,12 @@ class Tracker:
         :param feature_threshold: Threshold for re-id feature matching.
         """
         self.camera: CameraClient = camera
-        self.lambda_value = cfg.tracker_config.lambda_value.value
-        self.distance_threshold = cfg.tracker_config.min_distance_threshold.value
-        self.max_age_track = cfg.tracker_config.max_age_track.value
-        self.distance = cfg.tracker_config.feature_distance_metric.value
-        self.sleep_period = 1 / (cfg.tracker_config.max_frequency.value)
-        self.crop_region = cfg.tracker_config.crop_region.value
+        self.lambda_value = cfg.tracker_config.lambda_value
+        self.distance_threshold = cfg.tracker_config.min_distance_threshold
+        self.max_age_track = cfg.tracker_config.max_age_track
+        self.distance = cfg.tracker_config.feature_distance_metric
+        self.sleep_period = 1 / (cfg.tracker_config.max_frequency)
+        self.crop_region = cfg.tracker_config.crop_region
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -57,27 +57,25 @@ class Tracker:
 
         self.track_candidates: List[Track] = []
         self.tracks_manager = TracksManager(cfg.tracks_manager_config)
-        self.start_fresh: bool = cfg.tracker_config.start_fresh.value
-        self.save_to_db: bool = cfg.tracker_config.save_to_db.value
+        self.start_fresh: bool = cfg.tracker_config.start_fresh
+        self.save_to_db: bool = cfg.tracker_config.save_to_db
 
-        self.minimum_track_persistance: int = (
-            cfg.tracker_config.min_track_persistence.value
-        )
+        self.minimum_track_persistance: int = cfg.tracker_config.min_track_persistence
 
         self.category_count: Dict[str, int] = {}
 
         self.track_ids_with_label: Dict[str, List[str]] = {}
 
         self.labeled_person_embeddings: Dict[str, List[torch.Tensor]] = {}
-        self.path_to_known_persons = cfg.tracker_config.path_to_known_persons.value
+        self.path_to_known_persons = cfg.tracker_config.path_to_known_persons
 
-        self.reid_threshold = cfg.tracker_config.re_id_threshold.value
+        self.reid_threshold = cfg.tracker_config.re_id_threshold
 
         self.current_tracks_id = set()
         self.background_task = None
         self.new_object_event = Event()
         self.new_object_notifier = NewObjectNotifier(
-            self.new_object_event, cfg.tracker_config.cooldown_period.value
+            self.new_object_event, cfg.tracker_config.cooldown_period
         )
         self.stop_event = Event()
 
@@ -149,7 +147,7 @@ class Tracker:
                     # Check if the current image is identical to the last one to avoid processing duplicates
                     if torch.equal(img.uint8_tensor, self.last_image.uint8_tensor):
                         continue
-                    self.last_image = img
+                self.last_image = img
                 try:
                     self.update(img)  # Update tracks
                 except Exception as e:
@@ -165,7 +163,7 @@ class Tracker:
         except Exception as e:
             LOGGER.error(f"Error getting image: {e}")
             return None
-        return ImageObject(viam_img, self.device, self.crop_region)
+        return ImageObject(viam_img, device=self.device, crop_region=self.crop_region)
 
     def relabel_tracks(self, dict_old_label_new_label: Dict[str, str]):
         answer = {}
@@ -188,11 +186,24 @@ class Tracker:
 
         for track in self.tracks.values():
             if track.is_detected():
-                dets.append(track.get_detection())
+                dets.append(
+                    track.get_detection(
+                        crop_region=self.crop_region,
+                        original_image_width=self.last_image.width,
+                        original_image_height=self.last_image.height,
+                    )
+                )
 
         for track in self.track_candidates:
             if track.is_detected():
-                dets.append(track.get_detection(self.minimum_track_persistance))
+                dets.append(
+                    track.get_detection(
+                        crop_region=self.crop_region,
+                        min_persistence=self.minimum_track_persistance,
+                        original_image_width=self.last_image.width,
+                        original_image_height=self.last_image.height,
+                    )
+                )
         return dets
 
     async def is_new_object_detected(self):
@@ -340,7 +351,7 @@ class Tracker:
         # Write only the updated tracks on the db
         # TODO: only pass updated tracks so we don't serialize everytime
         if self.save_to_db:
-            if self.count % self.tracks_manager.save_period.value == 0:
+            if self.count % self.tracks_manager.save_period == 0:
                 self.tracks_manager.write_tracks_on_db(self.tracks)
                 self.tracks_manager.write_category_count_on_db(self.category_count)
 

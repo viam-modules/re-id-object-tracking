@@ -37,7 +37,7 @@ class Track:
         self.conf_from_reid = 0
 
         self.label_from_faceid: Optional[str] = None
-        self.conf_from_faceid: Optional[str]  = None
+        self.conf_from_faceid: Optional[str] = None
 
         self.persistence: int = 0
         self.is_candidate: bool = is_candidate
@@ -143,7 +143,13 @@ class Track:
         """
         return np.linalg.norm(self.feature_vector - feature_vector)
 
-    def get_detection(self, min_persistence=None) -> Detection:
+    def get_detection(
+        self,
+        crop_region,
+        min_persistence=None,
+        original_image_width=None,
+        original_image_height=None,
+    ) -> Detection:
         if self.is_candidate:
             if min_persistence is None:
                 raise ValueError(
@@ -156,11 +162,25 @@ class Track:
             if label != self.track_id:
                 class_name += f"  (label: {label})"
 
+        # Convert bbox from cropped coordinates to original image coordinates
+        x_min, y_min, x_max, y_max = self.bbox
+
+        if crop_region:
+            # Adjust coordinates based on crop region
+            x_offset = int(crop_region.get("x1_rel", 0.0) * original_image_width)
+            y_offset = int(crop_region.get("y1_rel", 0.0) * original_image_height)
+
+            # Convert back to original image coordinates
+            x_min = x_min + x_offset
+            y_min = y_min + y_offset
+            x_max = x_max + x_offset
+            y_max = y_max + y_offset
+
         return Detection(
-            x_min=self.bbox[0],
-            y_min=self.bbox[1],
-            x_max=self.bbox[2],
-            y_max=self.bbox[3],
+            x_min=x_min,
+            y_min=y_min,
+            x_max=x_max,
+            y_max=y_max,
             confidence=1 - self.distance,
             class_name=class_name,
         )

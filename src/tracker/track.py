@@ -171,10 +171,10 @@ class Track:
             y_offset = int(crop_region.get("y1_rel", 0.0) * original_image_height)
 
             # Convert back to original image coordinates
-            x_min = x_min + x_offset
-            y_min = y_min + y_offset
-            x_max = x_max + x_offset
-            y_max = y_max + y_offset
+            x_min = min(original_image_width - 1, x_min + x_offset)
+            y_min = min(original_image_height - 1, y_min + y_offset)
+            x_max = min(original_image_width - 1, x_max + x_offset)
+            y_max = min(original_image_height - 1, y_max + y_offset)
 
         return Detection(
             x_min=x_min,

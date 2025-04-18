@@ -61,7 +61,7 @@ class FaceDetector:
         cfg: FaceIdConfig,
         debug: bool = False,
     ):
-        self.model_config = ENCODERS_CONFIG.get(cfg.detector.value)
+        self.model_config = ENCODERS_CONFIG.get(cfg.detector)
         model_path = self.model_config.get_model_path()
         self.input_size = self.model_config.input_size
         providers = ["CPUExecutionProvider"]
@@ -78,7 +78,7 @@ class FaceDetector:
             0
         ].name  # Assuming this is confidences
         self.box_output_name = self.session.get_outputs()[1].name
-        self.threshold = cfg.detector_threshold.value
+        self.threshold = cfg.detector_threshold
         self.debug = debug
         self.margin = 0
 

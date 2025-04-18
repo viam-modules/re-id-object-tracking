@@ -36,7 +36,7 @@ class TracksManager:
     def __init__(self, config: TracksManagerConfig):
         self.tracks_on_disk: Dict[str, Track] = {}
         self.category_count_on_disk: Dict[str, int] = {}
-        self.path_to_database = config.path_to_db.value
+        self.path_to_database = config.path_to_db
         self.track_ids_with_label_on_disk: Dict[str, List[str]] = {}
         self.save_period = config.save_period
         self.con: sqlite3.Connection = sqlite3.connect(self.path_to_database)

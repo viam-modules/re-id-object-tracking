@@ -38,10 +38,10 @@ def get_encoder(cfg: FeatureEncoderConfig) -> FeatureEncoder:
     Factory function to return the correct detector based on the configuration.
     """
     # Delay the import of TorchvisionDetector to avoid circular imports
-    model_name: str = cfg.feature_extractor_name.value
+    model_name: str = cfg.feature_extractor_name
     if model_name.startswith("osnet_"):
         from src.tracker.encoder.os_net.os_net_encoder import OSNetFeatureEncoder
 
         return OSNetFeatureEncoder(cfg)
     else:
-        raise ValueError(f"Model {cfg.model_name.value} is not supported.")
+        raise ValueError(f"Model {cfg.model_name} is not supported.")

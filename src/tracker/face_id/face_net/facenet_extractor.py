@@ -51,7 +51,7 @@ ENCODERS_CONFIG: Dict[str, EncoderModelConfig] = {
 
 class FaceFeaturesExtractor:
     def __init__(self, cfg: FaceIdConfig):
-        self.model_config = ENCODERS_CONFIG.get(cfg.feature_extractor.value)
+        self.model_config = ENCODERS_CONFIG.get(cfg.feature_extractor)
         model_path = self.model_config.get_model_path()
         self.input_shape = self.model_config.input_shape
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

@@ -26,18 +26,18 @@ ssl._create_default_https_context = ssl._create_unverified_context
 class TorchvisionDetector(Detector):
     def __init__(self, cfg: DetectorConfig):
         super().__init__(cfg)
-        if cfg.model_name.value == "fasterrcnn_mobilenet_v3_large_320_fpn":
+        if cfg.model_name == "fasterrcnn_mobilenet_v3_large_320_fpn":
             weights = FasterRCNN_MobileNet_V3_Large_320_FPN_Weights.COCO_V1
             self.model = fasterrcnn_mobilenet_v3_large_320_fpn(
                 weights=weights,
-                box_score_thresh=cfg.threshold.value,
+                box_score_thresh=cfg.threshold,
                 num_classes=91,
             )
-        elif cfg.model_name.value == "fasterrcnn_mobilenet_v3_large_fpn":
+        elif cfg.model_name == "fasterrcnn_mobilenet_v3_large_fpn":
             weights = FasterRCNN_MobileNet_V3_Large_FPN_Weights.COCO_V1
             self.model = fasterrcnn_mobilenet_v3_large_fpn(
                 weights=weights,
-                box_score_thresh=cfg.threshold.value,
+                box_score_thresh=cfg.threshold,
                 num_classes=91,
             )
 
@@ -47,23 +47,23 @@ class TorchvisionDetector(Detector):
             )
 
         self.categories = weights.meta["categories"]
-        self.threshold = cfg.threshold.value  # TODO: do it in the detector super class
+        self.threshold = cfg.threshold  # TODO: do it in the detector super class
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model.to(self.device)
         self.model.eval()
         self.transform = weights.transforms()
 
         # Debug configuration
-        self._enable_debug_tools = cfg._enable_debug_tools.value
+        self._enable_debug_tools = cfg._enable_debug_tools
         if self._enable_debug_tools:
-            if cfg._path_to_debug_directory.value is None:
+            if cfg._path_to_debug_directory is None:
                 raise ValueError(
                     "path_to_debug_directory is not set but _enable_debug_tools is set to true. Please set it to a valid path."
                 )
-            self._path_to_debug_directory = cfg._path_to_debug_directory.value
+            self._path_to_debug_directory = cfg._path_to_debug_directory
             if not os.path.exists(self._path_to_debug_directory):
                 os.makedirs(self._path_to_debug_directory)
-            self._max_size_debug_directory = cfg._max_size_debug_directory.value
+            self._max_size_debug_directory = cfg._max_size_debug_directory
 
     def detect(self, image: ImageObject, visualize: bool = False) -> List[Detection]:
         preprocessed_image = self.transform(image.uint8_tensor)

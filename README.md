@@ -34,7 +34,14 @@ database file does not exist yet, it will be created.
 ```json
 {
   "camera_name": "camera-1",
-  "path_to_database": "/path/to/database.db"
+  "path_to_database": "/path/to/database.db",
+  #optional
+  "crop_region": {
+    "x2_rel": 1,
+    "y2_rel": 1,
+    "x1_rel": 0.5,
+    "y1_rel": 0.5
+  }
 }
 ```
 
@@ -114,6 +121,8 @@ Recomputes embeddings.
 | `save_period`      | int    | Optional     | `20`    | Interval (in number of tracking steps) when tracks are saved to the database.               |
 | `start_fresh`             | bool   | Optional  | `False`       | Whether or not to load the tracks from the database at `reconfigure()`.                             |
 | `path_to_known_persons`   | string | Optional  | `None`        | Path to the database containing pictures of entire persons. If the directory does not exist it will be created at `reconfigure()`. Refer [example directory tree](#example-of-directory-tree) to see how to add pictures of known persons and associate labels with the persons.            |
+| `crop_region`             | dict   | Optional  | `None`        | Defines a region of the image to crop for processing. Must include four float values between 0 and 1: `x1_rel`, `y1_rel`, `x2_rel`, `y2_rel` representing the relative coordinates of the crop region. |
+
 
 
 ### Person detector attributes

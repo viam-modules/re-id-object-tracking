@@ -46,7 +46,7 @@ class Detector:
         :param max_results: Maximum number of detection results to return.
         """
 
-        model_name = cfg.model_name.value
+        model_name = cfg.model_name
         self.model_config = DETECTORS_CONFIG.get(model_name)
 
         BaseOptions = mp.tasks.BaseOptions
@@ -57,9 +57,9 @@ class Detector:
             base_options=BaseOptions(
                 model_asset_path=self.model_config.get_model_path()
             ),
-            max_results=cfg.max_results.value,
+            max_results=cfg.max_results,
             running_mode=VisionRunningMode.IMAGE,
-            score_threshold=cfg.threshold.value,
+            score_threshold=cfg.threshold,
             category_allowlist=["person"],
         )
         self.detector = vision.ObjectDetector.create_from_options(self.options)

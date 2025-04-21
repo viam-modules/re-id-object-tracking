@@ -99,8 +99,8 @@ class FaceIdentifier:
 
                 # Check if distances meet the thresholds
                 if (
-                    cos_dist < self.cfg.cosine_id_threshold.value
-                    and euc_dist <= self.cfg.euclidean_id_threshold.value
+                    cos_dist < self.cfg.cosine_id_threshold
+                    and euc_dist <= self.cfg.euclidean_id_threshold
                 ):
                     # Update the best match if the cosine distance is smaller
                     if cos_dist < min_cos_dist:
@@ -114,7 +114,7 @@ class FaceIdentifier:
         """
         Computes embeddings for known faces from the picture directory.
         """
-        path_to_known_faces = self.cfg.path_to_known_faces.value
+        path_to_known_faces = self.cfg.path_to_known_faces
         if path_to_known_faces is None:
             return
         if not os.path.exists(path_to_known_faces):

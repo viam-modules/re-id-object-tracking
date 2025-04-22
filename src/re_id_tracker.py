@@ -19,13 +19,13 @@ from viam.resource.types import Model, ModelFamily
 from viam.services.vision import CaptureAllResult, Vision
 from viam.utils import ValueTypes
 
-from src.config.config import ReIDObjetcTrackerConfig
+from src.config.config import ReIDObjectTrackerConfig
 from src.tracker.tracker import Tracker
 
 LOGGER = getLogger(__name__)
 
 
-class ReIDObjetcTracker(Vision, Reconfigurable):
+class ReIDObjectTracker(Vision, Reconfigurable):
     """ReIDTracker is a subclass a Viam Vision Service"""
 
     MODEL: ClassVar[Model] = Model(
@@ -47,11 +47,11 @@ class ReIDObjetcTracker(Vision, Reconfigurable):
         return service
 
     # Validates JSON Configuration
-    @classmethod
-    def validate_config(cls, config: ServiceConfig) -> Sequence[str]:
+    @staticmethod
+    def validate_config(config: ServiceConfig) -> Sequence[str]:
         """Validate config and returns a list of dependencies."""
         camera_name = config.attributes.fields["camera_name"].string_value
-        _ = ReIDObjetcTrackerConfig(config)
+        _ = ReIDObjectTrackerConfig(config)
         return [camera_name]
 
     def reconfigure(
@@ -60,7 +60,7 @@ class ReIDObjetcTracker(Vision, Reconfigurable):
         self.camera_name = config.attributes.fields["camera_name"].string_value
         self.camera = dependencies[Camera.get_resource_name(self.camera_name)]
 
-        re_id_tracker_cfg = ReIDObjetcTrackerConfig(config)
+        re_id_tracker_cfg = ReIDObjectTrackerConfig(config)
         if self.tracker is not None:
             create_task(self.stop_and_get_new_tracker(re_id_tracker_cfg))
         else:

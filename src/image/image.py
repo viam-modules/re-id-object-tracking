@@ -62,5 +62,5 @@ class ImageObject:
             y2 = max(y1 + 1, min(y2, self.height))
 
             # Apply cropping to both tensors
-            self.uint8_tensor = uint8_tensor[:, y1:y2, x1:x2]
-            self.float32_tensor = float32_tensor[:, y1:y2, x1:x2]
+            self.uint8_tensor = self.uint8_tensor[:, y1:y2, x1:x2]
+            self.float32_tensor = self.float32_tensor[:, y1:y2, x1:x2]

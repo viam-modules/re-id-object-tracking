@@ -22,9 +22,15 @@ PASSING_PROPERTIES = Vision.Properties(
 
 WORKING_CONFIG_DICT = {
     "camera_name": CAMERA_NAME,
-    "path_to_known_persons": "./tests",
+    "path_to_known_persons": "./known_persons",
     "path_to_database": "./something.db",  # TODO: make it pure
     "_start_background_loop": False,
+    # "crop_region": {
+    #     "y1_rel": 0.5,
+    #     "x2_rel": 1,
+    #     "y2_rel": 1,
+    #     "x1_rel": 0.5,
+    # },
 }
 
 
@@ -52,6 +58,7 @@ class TestFaceReId:
         assert len(service.tracker.labeled_person_embeddings["alex"]) == 2
 
         img = await service.tracker.get_and_decode_img()
+        service.tracker.last_image = img
         # brand new tracks are not classified as new person but as track candidate
         for i in range(service.tracker.minimum_track_persistance + 1):
             service.tracker.update(img=img)
@@ -65,6 +72,10 @@ class TestFaceReId:
         assert len(service.tracker.track_candidates) == 0
         for track in service.tracker.tracks.values():
             assert track.label_from_reid == "alex"
+        detections = await service.get_detections_from_camera(
+            camera_name=CAMERA_NAME, extra={}, timeout=10
+        )
+        print(detections)
 
         await service.close()
 
@@ -73,3 +84,10 @@ class TestFaceReId:
         service = ReIDObjetcTracker("test")
         p = await service.get_properties()
         assert p == PASSING_PROPERTIES
+
+
+if __name__ == "__main__":
+    # Run all tests with pytest
+    pytest.main(
+        ["-xvs", __file__]
+    )  # verbose, stop after first failure, don't capture output

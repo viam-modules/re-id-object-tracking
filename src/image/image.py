@@ -42,12 +42,10 @@ class ImageObject:
         uint8_tensor, float32_tensor = get_tensor_from_np_array(self.np_array)
         self.uint8_tensor = uint8_tensor.to(self.device)
         self.float32_tensor = float32_tensor.to(self.device)
+        self.width = uint8_tensor.shape[2]
+        self.height = uint8_tensor.shape[1]
 
         if crop_region is not None:
-            # Get image dimensions
-            self.width = uint8_tensor.shape[2]
-            self.height = uint8_tensor.shape[1]
-
             # Convert relative coordinates (0.0-1.0) to absolute pixel positions
 
             x1 = int(crop_region.get("x1_rel", 0.0) * self.width)

@@ -98,6 +98,7 @@ class DetectorConfig:
             allowlist=[
                 "fasterrcnn_mobilenet_v3_large_320_fpn",  # low resolution model (best effort to resize smallest edge to 320)
                 "fasterrcnn_mobilenet_v3_large_fpn",  #  higher resolution model (best effort to resize smallest edge to 800)
+                "ir_detector",  # ir person detector
             ],
         ).validate(config)
         self.threshold = FloatAttribute(

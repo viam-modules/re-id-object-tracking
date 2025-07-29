@@ -219,8 +219,10 @@ class Tracker:
         :param detections: List of Detection objects detected in the current frame.
         """
         self.clear_detected_track()
-        # Get new detections
-        detections = self.detector.detect(img)
+        if img.is_ir:
+            detections = self.ir_detector.detect(img)
+        else:
+            detections = self.detector.detect(img)
 
         # Keep track of the old tracks, updated and unmatched tracks
         all_old_tracks_id = set(self.tracks.keys())

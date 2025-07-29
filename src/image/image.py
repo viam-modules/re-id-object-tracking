@@ -39,6 +39,7 @@ class ImageObject:
             )  # -> in (H, W, C)
 
         self.np_array = np.array(self.pil_image, dtype=np.uint8)
+        self.is_ir = self._is_ir()
         uint8_tensor, float32_tensor = get_tensor_from_np_array(self.np_array)
         self.uint8_tensor = uint8_tensor.to(self.device)
         self.float32_tensor = float32_tensor.to(self.device)
@@ -62,3 +63,14 @@ class ImageObject:
             # Apply cropping to both tensors
             self.uint8_tensor = self.uint8_tensor[:, y1:y2, x1:x2]
             self.float32_tensor = self.float32_tensor[:, y1:y2, x1:x2]
+
+    def _is_ir(self) -> bool:
+        """
+        check if image is IR by equating 3 channels
+        """
+
+        return np.array_equal(
+            self.np_array[:, :, 0], self.np_array[:, :, 1]
+        ) and np.array_equal(
+            self.np_array[:, :, 1], self.np_array[:, :, 2]
+        )  # check if image is IR by equating 3 channels

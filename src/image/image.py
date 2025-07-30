@@ -70,5 +70,5 @@ class ImageObject:
         """
 
         return torch.equal(
-            self.uint8_tensor[:, :, 0], self.uint8_tensor[:, :, 1]
-        ) and torch.equal(self.uint8_tensor[:, :, 1], self.uint8_tensor[:, :, 2])
+            self.uint8_tensor[0, :, :], self.uint8_tensor[1, :, :]
+        ) and torch.equal(self.uint8_tensor[1, :, :], self.uint8_tensor[2, :, :])

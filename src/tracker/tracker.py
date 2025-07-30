@@ -21,6 +21,7 @@ from src.tracker.encoder.feature_encoder import FeatureEncoder, get_encoder
 from src.tracker.face_id.identifier import FaceIdentifier
 from src.tracker.track import Track
 from src.tracker.tracks_manager import TracksManager
+from src.tracker.detector.ir_detector import IRDetector
 from src.utils import log_cost_matrix, log_tracks_info
 
 LOGGER = getLogger(__name__)
@@ -50,6 +51,7 @@ class Tracker:
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         self.detector: Detector = get_detector(cfg.detector_config)
+        self.ir_detector: Detector = IRDetector(cfg.detector_config)
         self.encoder: FeatureEncoder = get_encoder(cfg.encoder_config)
         self.face_identifier: FaceIdentifier = FaceIdentifier(cfg.face_id_config)
 

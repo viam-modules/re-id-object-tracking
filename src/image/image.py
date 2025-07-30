@@ -39,10 +39,10 @@ class ImageObject:
             )  # -> in (H, W, C)
 
         self.np_array = np.array(self.pil_image, dtype=np.uint8)
-        self.is_ir = self._is_ir()
         uint8_tensor, float32_tensor = get_tensor_from_np_array(self.np_array)
         self.uint8_tensor = uint8_tensor.to(self.device)
         self.float32_tensor = float32_tensor.to(self.device)
+        self.is_ir = self._is_ir()
         self.width = uint8_tensor.shape[2]
         self.height = uint8_tensor.shape[1]
 
@@ -66,11 +66,9 @@ class ImageObject:
 
     def _is_ir(self) -> bool:
         """
-        check if image is IR by equating 3 channels
+        check if image is IR by equating 3 channels (on GPU)
         """
 
-        return np.array_equal(
-            self.np_array[:, :, 0], self.np_array[:, :, 1]
-        ) and np.array_equal(
-            self.np_array[:, :, 1], self.np_array[:, :, 2]
-        )  # check if image is IR by equating 3 channels
+        return torch.equal(
+            self.uint8_tensor[:, :, 0], self.uint8_tensor[:, :, 1]
+        ) and torch.equal(self.uint8_tensor[:, :, 1], self.uint8_tensor[:, :, 2])

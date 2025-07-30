@@ -35,5 +35,6 @@ def get_detector(cfg: DetectorConfig) -> Detector:
         from src.tracker.detector.torchvision_detector import TorchvisionDetector
 
         return TorchvisionDetector(cfg)
+
     else:
         raise ValueError(f"Model {cfg.model_name} is not supported.")

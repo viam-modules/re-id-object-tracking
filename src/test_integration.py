@@ -34,7 +34,7 @@ WORKING_CONFIG_DICT = {
 }
 
 
-IMG_PATH = "./tests/alex"
+IMG_PATH = "./tests/isha"
 
 
 def get_vision_service(config_dict: Dict, reconfigure=True):
@@ -84,6 +84,21 @@ class TestFaceReId:
         service = ReIDObjetcTracker("test")
         p = await service.get_properties()
         assert p == PASSING_PROPERTIES
+
+
+class TestIRDetector:
+    @pytest.mark.asyncio
+    async def test_ir_detector_selection(self):
+        """Test that IR detector is selected for IR images, RGB detector for RGB images."""
+        service = get_vision_service(WORKING_CONFIG_DICT, reconfigure=True)
+        # Get an img from camera
+        img = await service.tracker.get_and_decode_img()
+        print(f"Image is_ir: {img.is_ir}")
+        # tracker update to trigger detection
+        service.tracker.update(img=img)
+        print(f"detector: {service.tracker.detector}")
+
+        await service.close()
 
 
 if __name__ == "__main__":

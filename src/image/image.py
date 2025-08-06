@@ -68,7 +68,10 @@ class ImageObject:
         """
         check if image is IR by equating 3 channels (on GPU)
         """
+        #we plan to do this faster in the future (instead of manually comparing all 3 channels)
 
         return torch.equal(
             self.uint8_tensor[0, :, :], self.uint8_tensor[1, :, :]
-        ) and torch.equal(self.uint8_tensor[1, :, :], self.uint8_tensor[2, :, :])
+        ) and torch.equal(self.uint8_tensor[1, :, :], self.uint8_tensor[2, :, :]) 
+
+        

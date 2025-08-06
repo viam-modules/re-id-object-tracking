@@ -1,3 +1,4 @@
+from os import truncate
 from viam.proto.app.robot import ServiceConfig
 
 from src.config.attribute import (
@@ -120,16 +121,57 @@ class DetectorConfig:
         ).validate(config)
 
         self._enable_debug_tools = BoolAttribute(
-            field_name="_enable_debug_tools", default_value=False
+            field_name="_enable_debug_tools", default_value=True
         ).validate(config)
 
         self._path_to_debug_directory = StringAttribute(
             field_name="_path_to_debug_directory",
-            default_value=None,
+            default_value="debug",
         ).validate(config)
 
         self._max_size_debug_directory = IntAttribute(
             field_name="_max_size_debug_directory", default_value=200
+        ).validate(config)
+
+class IRDetectorConfig:
+    def __init__(self, config: "ServiceConfig"):
+        self.model_name = StringAttribute(
+            field_name="ir_detector_model_name",
+            default_value="ir_detector",
+            allowlist=[
+                "ir_detector",
+            ],
+        ).validate(config)
+        self.threshold = FloatAttribute(
+            field_name="ir_detection_threshold",
+            min_value=0.0,
+            max_value=1.0,
+            default_value=0.85, #this can be changed as needed 
+        ).validate(config)
+        self.device = StringAttribute(
+            field_name="ir_detector_device",
+            default_value="cpu",
+            allowlist=["cpu", "cuda"],
+        ).validate(config)
+
+        # TODO: add usage for torchvision
+        self.max_results = IntAttribute(
+            field_name="ir_detection_max_detection_results",
+            default_value=5,
+            min_value=1,
+        ).validate(config)
+
+        self._enable_debug_tools = BoolAttribute(
+            field_name="ir_enable_debug_tools", default_value=True
+        ).validate(config)
+
+        self._path_to_debug_directory = StringAttribute(
+            field_name="ir_path_to_debug_directory",
+            default_value="debug",
+        ).validate(config)
+
+        self._max_size_debug_directory = IntAttribute(
+            field_name="ir_max_size_debug_directory", default_value=200
         ).validate(config)
 
 
@@ -211,6 +253,7 @@ class ReIDObjetcTrackerConfig:
 
         self.tracker_config = TrackerConfig(config)
         self.detector_config = DetectorConfig(config)
+        self.ir_detector_config = IRDetectorConfig(config)
         self.encoder_config = FeatureEncoderConfig(config)
         self.tracks_manager_config = TracksManagerConfig(config)
         self.face_id_config = FaceIdConfig(config)

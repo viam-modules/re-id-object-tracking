@@ -1,11 +1,12 @@
+import os
 from typing import Dict
 
 import pytest
-from google.protobuf.struct_pb2 import Struct
-from viam.proto.app.robot import ServiceConfig
 from viam.services.vision import Vision
 
 from src.re_id_tracker import ReIDObjetcTracker
+from src.tracker.detector.ir_detector import IRDetector
+from src.tracker.detector.torchvision_detector import TorchvisionDetector
 from tests.fake_camera import FakeCamera
 from tests.utils import get_config
 
@@ -17,7 +18,6 @@ PASSING_PROPERTIES = Vision.Properties(
     object_point_clouds_supported=False,
 )
 
-# TODO: test detectors
 # MIN_CONFIDENCE_PASSING = 0.8
 
 WORKING_CONFIG_DICT = {
@@ -91,12 +91,32 @@ class TestIRDetector:
     async def test_ir_detector_selection(self):
         """Test that IR detector is selected for IR images, RGB detector for RGB images."""
         service = get_vision_service(WORKING_CONFIG_DICT, reconfigure=True)
-        # Get an img from camera
-        img = await service.tracker.get_and_decode_img()
-        print(f"Image is_ir: {img.is_ir}")
-        # tracker update to trigger detection
-        service.tracker.update(img=img)
-        print(f"detector: {service.tracker.detector}")
+
+        # Get total number of images available
+        total_images = len([f for f in os.listdir(IMG_PATH) if f.endswith(".jpg")])
+        print(f"Total images in {IMG_PATH}: {total_images}")
+
+        # Process all images
+        for i in range(total_images):
+            # Get an img from camera
+            img = await service.tracker.get_and_decode_img()
+            print(f"Image is_ir: {img.is_ir}")
+
+            # tracker update to trigger detection
+            service.tracker.update(img=img)
+
+            # check which detector was actually used
+            print(f"used: {type(service.tracker.last_used_detector).__name__}")
+
+            # Verify the correct detector was used
+            if img.is_ir:
+                assert isinstance(service.tracker.last_used_detector, IRDetector), (
+                    f"Image {i + 1} should be IR detector"
+                )
+            else:
+                assert isinstance(
+                    service.tracker.last_used_detector, TorchvisionDetector
+                ), f"Image {i + 1} should be RGB detector"
 
         await service.close()
 

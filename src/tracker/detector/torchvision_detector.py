@@ -65,6 +65,10 @@ class TorchvisionDetector(Detector):
                 os.makedirs(self._path_to_debug_directory)
             self._max_size_debug_directory = cfg._max_size_debug_directory
 
+    @property
+    def detector_type(self) -> str:
+        return "RGB"
+
     def detect(self, image: ImageObject, visualize: bool = False) -> List[Detection]:
         preprocessed_image = self.transform(image.uint8_tensor)
         batch = [preprocessed_image]

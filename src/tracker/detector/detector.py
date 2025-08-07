@@ -14,6 +14,13 @@ class Detector(ABC):
         """
         self.cfg = cfg
 
+    @property
+    def detector_type(self) -> str:
+        """
+        Returns the type of detector (IR or RGB)
+        """
+        return "unknown"
+
     @abstractmethod
     def detect(self, image: np.ndarray, visualize: bool = False) -> List[Detection]:
         """

@@ -11,7 +11,8 @@ results*
 
 #ignore models
 /src/models/
-
+something.db
+best_model.pth
 
 /pyinstaller_build/
 /pyinstaller_dist/

@@ -29,8 +29,9 @@ class IRDetector(Detector):
         self.input_size = (600, 800)
         self.image_mean = [0.2618]
         self.image_std = [0.1905]
-        self.box_nms_thresh = cfg.threshold
-
+        self.box_nms_thresh = 0.5
+        self.threshold = 0.85
+        self.categories = ["background", "person"]
         self.model.to(self.device)
         self.model.eval()
 
@@ -52,6 +53,10 @@ class IRDetector(Detector):
             if not os.path.exists(self._path_to_debug_directory):
                 os.makedirs(self._path_to_debug_directory)
             self._max_size_debug_directory = cfg._max_size_debug_directory
+    
+    @property
+    def detector_type(self) -> str:
+        return "IR"
 
     def _build_model(self, model_path: str):
         # replicating model strcutre from training
@@ -89,7 +94,9 @@ class IRDetector(Detector):
         wrapper_model = FasterRCNNDetector(self.model)
 
         if os.path.exists(model_path):
-            checkpoint = torch.load(model_path, map_location=self.device)
+            checkpoint = torch.load(
+                model_path, map_location=self.device, weights_only=False
+            )
             if "model_state_dict" in checkpoint:
                 wrapper_model.load_state_dict(checkpoint["model_state_dict"])
             else:
@@ -101,13 +108,18 @@ class IRDetector(Detector):
         return wrapper_model.model
 
     def detect(self, image: ImageObject, visualize: bool = False) -> List[Detection]:
-        rgb_tensor = image.uint8_tensor
-        single_channel_tensor = rgb_tensor[0:1]
-        preprocessed_image = self.model.transform(single_channel_tensor)
-        batch = [preprocessed_image]
+        rgb_tensor = image.uint8_tensor  # shape: [3,h,w]
+        single_channel_tensor = rgb_tensor[0:1]  # shape: [1,h,w]
+        single_channel_tensor = single_channel_tensor.float() / 255.0
+
+        preprocessed_image = self.model.transform([single_channel_tensor])
+        # batch = [preprocessed_image]
+        # getting the actual tensors
+        processed_tensors = (preprocessed_image[0]).tensors
+        self.resized_image = processed_tensors
 
         with torch.no_grad():
-            output = self.model(batch)[0]  # run inference
+            output = self.model(processed_tensors)  # run inference
 
         detections = self.post_process(output)
         # Save image if persons were detected and saving is enabled
@@ -130,20 +142,25 @@ class IRDetector(Detector):
                 filepath = os.path.join(self._path_to_debug_directory, filename)
 
                 save_tensor(image.float32_tensor, filepath)
+                self.visualize_ir_detections(detections, filepath)
 
         return detections
 
     # TODO: add post processing to check detections are in the right format
-    def post_process(self, input: Dict[str, torch.Tensor]) -> List[Detection]:
+    def post_process(self, input: List[Dict[str, torch.Tensor]]) -> List[Detection]:
         """
         Post-process the output of a torchvision detection model to create a list of Detection objects,
         filtering only detections where the label is 1.
         """
         detections = []
 
-        boxes = input["boxes"]  # Tensor of shape [N, 4]
-        scores = input["scores"]  # Tensor of shape [N]
-        labels = input["category_id"]  # Tensor of shape [N]
+        results = input[0]
+
+        print(f"results: {results.keys()}")
+
+        boxes = results["boxes"]  # Tensor of shape [N, 4]
+        scores = results["scores"]  # Tensor of shape [N]
+        labels = results["labels"]  # Tensor of shape [N]
 
         # Iterate over the detections in the current image
         for i in range(len(boxes)):
@@ -152,9 +169,67 @@ class IRDetector(Detector):
             if score > self.threshold:
                 bbox = list(map(int, boxes[i].tolist()))
                 category = self.categories[label_idx]
+                print(f"bbox: {bbox}, score: {score}, category: {category}")
                 detections.append(Detection(bbox, score, category))
 
         return detections
+
+    # def visualize_ir_detections(self, detections, output_path):
+    #     """
+    #     Visualize IR detections on the image and save to debug directory.
+
+    #     Args:
+    #         image_tensor: torch.Tensor of shape [C, H, W] (your single channel image)
+    #         detections: List of Detection objects from your IR detector
+    #         output_path: Path where to save the visualization
+    #     """
+    #     import matplotlib.pyplot as plt
+    #     import matplotlib.patches as patches
+    #     import numpy
+
+    #     # take first channel and squeeze to just H, W
+
+    #     img_np = self.resized_image[0].cpu().numpy().squeeze(0)
+
+    #     fig, ax = plt.subplots(1, figsize=(12, 8))
+    #     ax.imshow(img_np, cmap="gray")
+
+    #     # Plot detected boxes
+    #     if detections and len(detections) > 0:
+    #         for detection in detections:
+    #             x1, y1, x2, y2 = detection.bbox
+    #             score = detection.score
+    #             category = detection.category
+
+    #             # Create rectangle patch
+    #             rect = patches.Rectangle(
+    #                 (x1, y1),
+    #                 x2 - x1,
+    #                 y2 - y1,
+    #                 linewidth=2,
+    #                 edgecolor="red",
+    #                 facecolor="none",
+    #             )
+    #             ax.add_patch(rect)
+
+    #             # Add text with score and category
+    #             ax.text(
+    #                 x1,
+    #                 y1 - 5,
+    #                 f"{category}: {score:.3f}",
+    #                 color="red",
+    #                 fontsize=10,
+    #                 bbox=dict(boxstyle="round,pad=0.3", facecolor="white", alpha=0.7),
+    #             )
+
+    #     plt.title(f"IR Detections: {len(detections)} persons found")
+    #     plt.axis("off")
+
+    #     # Save the figure
+    #     plt.savefig(output_path, dpi=150, bbox_inches="tight")
+    #     plt.close()
+
+    #     print(f"Saved detection visualization to: {output_path}")
 
 
 class SingleChannelRCNNTransform(GeneralizedRCNNTransform):

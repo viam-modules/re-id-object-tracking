@@ -1,4 +1,3 @@
-from os import truncate
 from viam.proto.app.robot import ServiceConfig
 
 from src.config.attribute import (
@@ -121,12 +120,12 @@ class DetectorConfig:
         ).validate(config)
 
         self._enable_debug_tools = BoolAttribute(
-            field_name="_enable_debug_tools", default_value=True
+            field_name="_enable_debug_tools", default_value=False
         ).validate(config)
 
         self._path_to_debug_directory = StringAttribute(
             field_name="_path_to_debug_directory",
-            default_value="debug",
+            default_value="None",
         ).validate(config)
 
         self._max_size_debug_directory = IntAttribute(
@@ -162,12 +161,12 @@ class IRDetectorConfig:
         ).validate(config)
 
         self._enable_debug_tools = BoolAttribute(
-            field_name="ir_enable_debug_tools", default_value=True
+            field_name="ir_enable_debug_tools", default_value=False
         ).validate(config)
 
         self._path_to_debug_directory = StringAttribute(
             field_name="ir_path_to_debug_directory",
-            default_value="debug",
+            default_value="None",
         ).validate(config)
 
         self._max_size_debug_directory = IntAttribute(

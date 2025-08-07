@@ -21,6 +21,7 @@ from src.tracker.encoder.feature_encoder import FeatureEncoder, get_encoder
 from src.tracker.face_id.identifier import FaceIdentifier
 from src.tracker.track import Track
 from src.tracker.tracks_manager import TracksManager
+from src.tracker.detector.ir_detector import IRDetector
 from src.utils import log_cost_matrix, log_tracks_info
 
 LOGGER = getLogger(__name__)
@@ -50,6 +51,8 @@ class Tracker:
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         self.detector: Detector = get_detector(cfg.detector_config)
+        self.ir_detector: Detector = IRDetector(cfg.ir_detector_config) 
+        self.last_used_detector: Detector = None  # set during first update
         self.encoder: FeatureEncoder = get_encoder(cfg.encoder_config)
         self.face_identifier: FaceIdentifier = FaceIdentifier(cfg.face_id_config)
 
@@ -219,8 +222,13 @@ class Tracker:
         :param detections: List of Detection objects detected in the current frame.
         """
         self.clear_detected_track()
-        # Get new detections
-        detections = self.detector.detect(img)
+        if img.is_ir:
+            detections = self.ir_detector.detect(img)
+            # for checking which detector was used (IR or RGB)
+            self.last_used_detector = self.ir_detector
+        else:
+            detections = self.detector.detect(img)
+            self.last_used_detector = self.detector
 
         # Keep track of the old tracks, updated and unmatched tracks
         all_old_tracks_id = set(self.tracks.keys())

@@ -42,6 +42,7 @@ class ImageObject:
         uint8_tensor, float32_tensor = get_tensor_from_np_array(self.np_array)
         self.uint8_tensor = uint8_tensor.to(self.device)
         self.float32_tensor = float32_tensor.to(self.device)
+        self.is_ir = self._is_ir()
         self.width = uint8_tensor.shape[2]
         self.height = uint8_tensor.shape[1]
 
@@ -62,3 +63,15 @@ class ImageObject:
             # Apply cropping to both tensors
             self.uint8_tensor = self.uint8_tensor[:, y1:y2, x1:x2]
             self.float32_tensor = self.float32_tensor[:, y1:y2, x1:x2]
+
+    def _is_ir(self) -> bool:
+        """
+        check if image is IR by equating 3 channels (on GPU)
+        """
+        #we plan to do this faster in the future (instead of manually comparing all 3 channels)
+
+        return torch.equal(
+            self.uint8_tensor[0, :, :], self.uint8_tensor[1, :, :]
+        ) and torch.equal(self.uint8_tensor[1, :, :], self.uint8_tensor[2, :, :]) 
+
+        

@@ -14,6 +14,13 @@ class Detector(ABC):
         """
         self.cfg = cfg
 
+    @property
+    def detector_type(self) -> str:
+        """
+        Returns the type of detector (IR or RGB)
+        """
+        return "unknown"
+
     @abstractmethod
     def detect(self, image: np.ndarray, visualize: bool = False) -> List[Detection]:
         """
@@ -35,5 +42,6 @@ def get_detector(cfg: DetectorConfig) -> Detector:
         from src.tracker.detector.torchvision_detector import TorchvisionDetector
 
         return TorchvisionDetector(cfg)
+
     else:
         raise ValueError(f"Model {cfg.model_name} is not supported.")

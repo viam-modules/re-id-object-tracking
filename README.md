@@ -180,6 +180,9 @@ Cleaned with `make clean` (this also deletes pyinstaller build directory)
 This command builds the module executable using PyInstaller.
 
 This creates the PyInstaller executable under `./build/pyinstaller_dist`.
+
+The `first_run.sh` script is in `bin/first_run.sh`
+
 To upload to viam registry:
 ```bash
 viam login

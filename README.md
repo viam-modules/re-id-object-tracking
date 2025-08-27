@@ -176,6 +176,14 @@ This project includes a `Makefile` script to automate the PyInstaller build proc
 
 Cleaned with `make clean` (this also deletes pyinstaller build directory)
 
+### Install necessary mode files
+
+```
+mkdir src/models/osnet
+cd src/models/osnet
+wget https://s3.unistra.fr/camma_public/github/Self-MVA/weights/osnet_ain_ms_d_c.pth.tar
+```
+
 #### `make pyinstaller`
 This command builds the module executable using PyInstaller.
 

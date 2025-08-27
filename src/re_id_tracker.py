@@ -4,7 +4,7 @@ to perform face Re-Id.
 """
 
 from asyncio import create_task
-from typing import Any, ClassVar, Dict, List, Mapping, Optional, Sequence
+from typing import Any, ClassVar, Dict, List, Mapping, Optional, Sequence, Tuple
 
 from typing_extensions import Self
 from viam.components.camera import Camera
@@ -48,11 +48,11 @@ class ReIDObjetcTracker(Vision, Reconfigurable):
 
     # Validates JSON Configuration
     @classmethod
-    def validate_config(cls, config: ServiceConfig) -> Sequence[str]:
+    def validate_config(cls, config: ServiceConfig) -> Tuple[Sequence[str], Sequence[str]]:
         """Validate config and returns a list of dependencies."""
         camera_name = config.attributes.fields["camera_name"].string_value
         _ = ReIDObjetcTrackerConfig(config)
-        return [camera_name]
+        return ([camera_name], [])
 
     def reconfigure(
         self, config: ServiceConfig, dependencies: Mapping[ResourceName, ResourceBase]

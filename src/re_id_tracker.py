@@ -120,7 +120,9 @@ class ReIDObjetcTracker(Vision, Reconfigurable):
         #     do_cmd_res = await self.do_command(extra)
 
         return CaptureAllResult(
-            image=img, classifications=classifications, detections=detections
+            image=img,
+            classifications=classifications or [],
+            detections=detections or [],
         )
 
     async def get_object_point_clouds(

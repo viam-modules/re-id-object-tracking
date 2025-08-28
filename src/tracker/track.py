@@ -2,7 +2,7 @@ from typing import Optional
 
 import numpy as np
 import torch
-from viam.services.vision import Detection
+from viam.proto.service.vision import Detection
 
 
 class Track:

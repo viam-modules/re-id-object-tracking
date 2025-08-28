@@ -176,10 +176,27 @@ This project includes a `Makefile` script to automate the PyInstaller build proc
 
 Cleaned with `make clean` (this also deletes pyinstaller build directory)
 
+### Get necessary model files
+
+You'll need three model files to package into the module in the following directory
+
+```
+mkdir src/models
+```
+
+you will also need to make three directories and get the model files for each
+
+- `osnet/osnet_ain_ms_d_c.pth.tar`
+- `ultraface/version-RFB-320-int8.onnx`
+- `face_net/20180402-114759-vggface2.pt`
+
 #### `make pyinstaller`
 This command builds the module executable using PyInstaller.
 
 This creates the PyInstaller executable under `./build/pyinstaller_dist`.
+
+The `first_run.sh` script is in `bin/first_run.sh`
+
 To upload to viam registry:
 ```bash
 viam login

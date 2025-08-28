@@ -15,7 +15,7 @@ async def main():
     registry before the module adds the resource model.
     """
     Registry.register_resource_creator(
-        Vision.SUBTYPE,
+        Vision.API,
         ReIDObjetcTracker.MODEL,
         ResourceCreatorRegistration(
             ReIDObjetcTracker.new_service,
@@ -24,7 +24,7 @@ async def main():
     )
     module = Module.from_args()
 
-    module.add_model_from_registry(Vision.SUBTYPE, ReIDObjetcTracker.MODEL)
+    module.add_model_from_registry(Vision.API, ReIDObjetcTracker.MODEL)
     await module.start()
 
 

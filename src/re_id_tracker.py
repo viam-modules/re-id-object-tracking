@@ -102,7 +102,11 @@ class ReIDObjetcTracker(Vision, Reconfigurable):
             )
         img = None
         if return_image:
-            img = await self.camera.get_image(mime_type=CameraMimeType.JPEG)
+            imgs = await self.camera.get_images()
+            if len(imgs) > 0:
+                img = imgs[0]
+            else:
+                raise ValueError("get_images returned empty list")
 
         classifications = None
         if return_classifications:

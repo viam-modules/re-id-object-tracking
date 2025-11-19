@@ -35,12 +35,13 @@ async def main(img_path, threshold, detector_model_name):
 
     number_of_detections = 0
     for i in range(cam.get_number_of_images()):
-        img = await cam.get_image(mime_type="image/jpeg")
-        img_object = ImageObject(img, device)
-        detections = detector.detect(img_object)
-        if len(detections) > 0:
-            print(f"Frame {i}: found {detections}")
-            number_of_detections += 1
+        imgs = await cam.get_images()
+        if len(imgs) > 0:
+            img_object = ImageObject(imgs[0], device)
+            detections = detector.detect(img_object)
+            if len(detections) > 0:
+                print(f"Frame {i}: found {detections}")
+                number_of_detections += 1
 
     print(
         f"Found {number_of_detections} detection(s) with threshold {threshold} using model {detector_model_name}"

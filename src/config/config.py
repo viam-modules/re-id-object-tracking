@@ -89,6 +89,11 @@ class TrackerConfig:
             ],
         ).validate(config)
 
+        self.color_source_name = StringAttribute(
+            field_name="color_source_name",
+            default_value=None,
+        ).validate(config)
+
 
 class DetectorConfig:
     def __init__(self, config: "ServiceConfig"):

@@ -85,7 +85,8 @@ class Tracker:
         self.start_background_loop = cfg.tracker_config._start_background_loop
 
         self.last_image: ImageObject = None
-        self.color_source_name: Optional[str] = None
+        # Use config value if provided, otherwise will be discovered on first call
+        self.color_source_name: Optional[str] = cfg.tracker_config.color_source_name
 
         self.compute_known_persons_embeddings()
 

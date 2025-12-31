@@ -21,6 +21,9 @@ PYINSTALLER_DISTPATH=$(BUILD)/pyinstaller_dist
 
 JP6_REQUIREMENTS=requirements_jp6.txt
 REQUIREMENTS=requirements.txt
+
+# Detect JetPack 6.x (R36)
+IS_JP6 := $(shell if [ -f /etc/nv_tegra_release ] && [ "$$(cat /etc/nv_tegra_release | head -1 | cut -f 2 -d ' ' | cut -f 1 -d ',')" = "R36" ]; then echo "1"; else echo "0"; fi)
 	
 $(VENV_DIR):
 	@echo "Building python venv"
@@ -57,7 +60,7 @@ $(BUILD)/$(TORCHVISION_WHEEL): $(VENV_DIR) $(BUILD)/$(PYTORCH_WHEEL)
 torchvision-wheel: $(BUILD)/$(TORCHVISION_WHEEL)
 
 setup: $(VENV_DIR)
-	@if [ -f /etc/nv_tegra_release ] && [ "$$(cat /etc/nv_tegra_release | head -1 | cut -f 2 -d ' ' | cut -f 1 -d ',')" = "R36" ]; then \
+	@if [ "$(IS_JP6)" = "1" ]; then \
 		echo "Detected JetPack 6.x - Installing requirements for JP6"; \
 		$(MAKE) torchvision-wheel onnxruntime-gpu-wheel; \
 		$(PYTHON) -m pip install -r $(JP6_REQUIREMENTS); \
@@ -76,8 +79,14 @@ $(PYINSTALLER_DISTPATH)/main: setup
 
 module.tar.gz: $(PYINSTALLER_DISTPATH)/main
 	cp $(PYINSTALLER_DISTPATH)/main ./
-	cp $(MODULE_DIR)/bin/first_run.sh ./
-	tar -czvf module.tar.gz main meta.json first_run.sh
+	@if [ "$(IS_JP6)" = "1" ]; then \
+		cp $(MODULE_DIR)/bin/first_run.sh ./; \
+		tar -czvf module.tar.gz main meta.json first_run.sh; \
+		rm -f first_run.sh; \
+	else \
+		tar -czvf module.tar.gz main meta.json; \
+	fi
+	rm -f main
 
 clean:
 	rm -rf $(BUILD) cuda-keyring_1.1-1_all.deb

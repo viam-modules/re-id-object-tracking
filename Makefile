@@ -88,6 +88,9 @@ module.tar.gz: $(PYINSTALLER_DISTPATH)/main
 	fi
 	rm -f main
 
+clean-pyinstaller:
+	rm -rf $(PYINSTALLER_DISTPATH) $(PYINSTALLER_WORKPATH)
+	
 clean:
 	rm -rf $(BUILD) cuda-keyring_1.1-1_all.deb
 

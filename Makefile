@@ -27,8 +27,10 @@ IS_JP6 := $(shell if [ -f /etc/nv_tegra_release ] && [ "$$(cat /etc/nv_tegra_rel
 	
 $(VENV_DIR):
 	@echo "Building python venv"
-	sudo apt install python3.10-venv
-	sudo apt install python3-pip
+	@if [ "$(IS_JP6)" = "1" ]; then \
+		sudo apt install python3.10-venv; \
+		sudo apt install python3-pip; \
+	fi
 	python3 -m venv $(VENV_DIR)
 	
 $(BUILD)/$(ONNXRUNTIME_WHEEL):

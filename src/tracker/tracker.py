@@ -3,7 +3,7 @@ import datetime
 import os
 from asyncio import Event, create_task, sleep
 from copy import deepcopy
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import numpy as np
 import torch
@@ -11,7 +11,7 @@ from PIL import Image
 from scipy.optimize import linear_sum_assignment
 from viam.components.camera import CameraClient
 from viam.logging import getLogger
-from viam.media.video import CameraMimeType
+from viam.media.video import CameraMimeType, ViamImage
 from viam.proto.service.vision import Detection
 
 from src.config.config import ReIDObjetcTrackerConfig
@@ -85,6 +85,8 @@ class Tracker:
         self.start_background_loop = cfg.tracker_config._start_background_loop
 
         self.last_image: ImageObject = None
+        # Use config value if provided, otherwise will be discovered on first call
+        self.color_source_name: Optional[str] = cfg.tracker_config.color_source_name
 
         self.compute_known_persons_embeddings()
 
@@ -157,11 +159,67 @@ class Tracker:
                     )  # sleep a bit more if something bad happened
             await sleep(self.sleep_period)
 
-    async def get_and_decode_img(self):
+    async def get_viam_image(self) -> Optional[ViamImage]:
+        """
+        Get a color image from the camera as a ViamImage.
+        Automatically discovers the color source on first call if not configured.
+        
+        Returns:
+            Optional[ViamImage]: The color image, or None if an error occurred.
+        """
         try:
-            viam_img = await self.camera.get_image(mime_type=CameraMimeType.JPEG)
+            # If we know the color source name, filter to only get that source
+            # Otherwise, get all images and find a color image (prioritizing JPEG)
+            filter_source_names = [self.color_source_name] if self.color_source_name else None
+            named_images, _ = await self.camera.get_images(filter_source_names=filter_source_names)
+            
+            # On first call or if source name not set, find a color image
+            if self.color_source_name is None:
+                # Priority: JPEG > PNG > VIAM_RGBA
+                # Exclude depth images: VIAM_RAW_DEPTH and PCD
+                color_image = None
+                for named_img in named_images:
+                    mime_type = named_img.mime_type
+                    # Skip depth images
+                    if mime_type in (CameraMimeType.VIAM_RAW_DEPTH, CameraMimeType.PCD):
+                        continue
+                    # Prioritize JPEG
+                    if mime_type == CameraMimeType.JPEG:
+                        color_image = named_img
+                        self.color_source_name = named_img.name
+                        break
+                    # Fallback to PNG if JPEG not found yet
+                    elif mime_type == CameraMimeType.PNG and color_image is None:
+                        color_image = named_img
+                        self.color_source_name = named_img.name
+                    # Fallback to VIAM_RGBA if neither JPEG nor PNG found
+                    elif mime_type == CameraMimeType.VIAM_RGBA and color_image is None:
+                        color_image = named_img
+                        self.color_source_name = named_img.name
+                if color_image is None:
+                    LOGGER.error("No color image found in camera sources")
+                    return None
+                return color_image
+            else:
+                # We filtered by source name, so we should have exactly one image
+                if not named_images:
+                    LOGGER.error(f"Expected color image from source '{self.color_source_name}' but got none")
+                    return None
+                return named_images[0]
+                
         except Exception as e:
             LOGGER.error(f"Error getting image: {e}")
+            return None
+
+    async def get_and_decode_img(self):
+        """
+        Get a color image from the camera and decode it into an ImageObject.
+        
+        Returns:
+            Optional[ImageObject]: The decoded image object, or None if an error occurred.
+        """
+        viam_img = await self.get_viam_image()
+        if viam_img is None:
             return None
         return ImageObject(viam_img, device=self.device, crop_region=self.crop_region)
 

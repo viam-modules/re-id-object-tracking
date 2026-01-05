@@ -122,6 +122,7 @@ Recomputes embeddings.
 | `start_fresh`             | bool   | Optional  | `False`       | Whether or not to load the tracks from the database at `reconfigure()`.                             |
 | `path_to_known_persons`   | string | Optional  | `None`        | Path to the database containing pictures of entire persons. If the directory does not exist it will be created at `reconfigure()`. Refer [example directory tree](#example-of-directory-tree) to see how to add pictures of known persons and associate labels with the persons.            |
 | `crop_region`             | dict   | Optional  | `None`        | Defines a region of the image to crop for processing. Must include four float values between 0 and 1: `x1_rel`, `y1_rel`, `x2_rel`, `y2_rel` representing the relative coordinates of the crop region. |
+| `color_source_name`       | string | Optional  | `None`        | Name of the camera source to use for color images. If not specified, the tracker will automatically discover a color image source on the first call, prioritizing JPEG > PNG > VIAM_RGBA formats. Depth images (VIAM_RAW_DEPTH, PCD) are automatically excluded. |
 
 
 

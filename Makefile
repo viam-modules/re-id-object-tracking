@@ -15,10 +15,15 @@ TORCHVISION_VERSION=0.20.0
 
 ONNXRUNTIME_WHEEL=onnxruntime_gpu-1.20.0-cp310-cp310-linux_aarch64.whl
 ONNXRUNTIME_WHEEL_URL=https://storage.googleapis.com/packages.viam.com/tools/onnxruntime_gpu-1.20.0-cp310-cp310-linux_aarch64.whl
-REQUIREMENTS=requirements.txt
 
 PYINSTALLER_WORKPATH=$(BUILD)/pyinstaller_build
 PYINSTALLER_DISTPATH=$(BUILD)/pyinstaller_dist
+
+JP6_REQUIREMENTS=requirements_jp6.txt
+REQUIREMENTS=requirements.txt
+
+# Detect JetPack 6.x (R36)
+IS_JP6 := $(shell if [ -f /etc/nv_tegra_release ] && [ "$$(cat /etc/nv_tegra_release | head -1 | cut -f 2 -d ' ' | cut -f 1 -d ',')" = "R36" ]; then echo "1"; else echo "0"; fi)
 	
 $(VENV_DIR):
 	@echo "Building python venv"
@@ -54,23 +59,38 @@ $(BUILD)/$(TORCHVISION_WHEEL): $(VENV_DIR) $(BUILD)/$(PYTORCH_WHEEL)
 
 torchvision-wheel: $(BUILD)/$(TORCHVISION_WHEEL)
 
-$(PYINSTALLER_DISTPATH)/main: $(BUILD)/$(TORCHVISION_WHEEL) $(BUILD)/$(ONNXRUNTIME_WHEEL)
-	@echo " Building pyinstaller executable"
-	$(PYTHON) -m pip install -r $(REQUIREMENTS)
-	$(PYTHON) -m pip install 'numpy<2' $(BUILD)/$(PYTORCH_WHEEL)
-	$(PYTHON) -m pip install $(BUILD)/$(TORCHVISION_WHEEL)
-	$(PYTHON) -m pip install $(BUILD)/$(ONNXRUNTIME_WHEEL)
-	$(PYTHON) -m PyInstaller --workpath "$(PYINSTALLER_WORKPATH)" --distpath "$(PYINSTALLER_DISTPATH)" main.spec
-
-
+setup: $(VENV_DIR)
+	@if [ "$(IS_JP6)" = "1" ]; then \
+		echo "Detected JetPack 6.x - Installing requirements for JP6"; \
+		$(MAKE) torchvision-wheel onnxruntime-gpu-wheel; \
+		$(PYTHON) -m pip install -r $(JP6_REQUIREMENTS); \
+		$(PYTHON) -m pip install 'numpy<2' $(BUILD)/$(PYTORCH_WHEEL); \
+		$(PYTHON) -m pip install $(BUILD)/$(TORCHVISION_WHEEL); \
+		$(PYTHON) -m pip install $(BUILD)/$(ONNXRUNTIME_WHEEL); \
+	else \
+		echo "Installing requirements"; \
+		source $(VENV_DIR)/bin/activate && pip install -r $(REQUIREMENTS); \
+	fi
 
 pyinstaller: $(PYINSTALLER_DISTPATH)/main
 
+$(PYINSTALLER_DISTPATH)/main: setup
+	$(PYTHON) -m PyInstaller --workpath "$(PYINSTALLER_WORKPATH)" --distpath "$(PYINSTALLER_DISTPATH)" main.spec
+
+module.tar.gz: $(PYINSTALLER_DISTPATH)/main
+	cp $(PYINSTALLER_DISTPATH)/main ./
+	@if [ "$(IS_JP6)" = "1" ]; then \
+		cp $(MODULE_DIR)/bin/first_run.sh ./; \
+		tar -czvf module.tar.gz main meta.json first_run.sh; \
+		rm -f first_run.sh; \
+	else \
+		tar -czvf module.tar.gz main meta.json; \
+	fi
+	rm -f main
+
 clean-pyinstaller:
 	rm -rf $(PYINSTALLER_DISTPATH) $(PYINSTALLER_WORKPATH)
-
-setup: torchvision-wheel onnxruntime-gpu-wheel
-
+	
 clean:
 	rm -rf $(BUILD) cuda-keyring_1.1-1_all.deb
 
